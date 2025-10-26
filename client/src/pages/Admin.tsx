@@ -100,6 +100,20 @@ export default function Admin() {
     },
   });
 
+  const addPlatformMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/platforms", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({ title: "Plataforma agregada exitosamente" });
+      setAddPlatformDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error al agregar plataforma", variant: "destructive" });
+    },
+  });
+
   const addModuleMutation = useMutation({
     mutationFn: async (data: any) => {
       return await apiRequest("POST", "/api/modules", data);
@@ -187,6 +201,7 @@ export default function Admin() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Altura</TableHead>
+                      <TableHead>Categoría</TableHead>
                       <TableHead>Precio Doméstico (Bs)</TableHead>
                       <TableHead>Precio Público (Bs)</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
@@ -201,6 +216,11 @@ export default function Admin() {
                             onSave={(value) => updatePlatformField(platform.id, "height", value)}
                             testId={`platform-${platform.id}-height`}
                           />
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground capitalize">
+                            {platform.category === "playground" ? "Parque" : "Casita"}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <InlineEditInput
@@ -498,6 +518,121 @@ export default function Admin() {
                 data-testid="button-submit-module"
               >
                 {addModuleMutation.isPending ? "Agregando..." : "Agregar Módulo"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addPlatformDialogOpen} onOpenChange={setAddPlatformDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Agregar Nueva Plataforma</DialogTitle>
+            <DialogDescription>
+              Completa los datos de la nueva plataforma. Puede ser para parque infantil o casita.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = {
+                height: formData.get("height") as string,
+                heightCm: parseInt(formData.get("heightCm") as string),
+                category: formData.get("category") as string,
+                priceDomestic: formData.get("priceDomestic") as string,
+                pricePublic: formData.get("pricePublic") as string,
+              };
+              addPlatformMutation.mutate(data);
+            }}
+          >
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="height">Altura (texto) *</Label>
+                  <Input
+                    id="height"
+                    name="height"
+                    required
+                    placeholder="Ej: 80cm, 1m, 1.2m"
+                    data-testid="input-platform-height"
+                  />
+                  <p className="text-xs text-muted-foreground">Como se mostrará al cliente</p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="heightCm">Altura en cm *</Label>
+                  <Input
+                    id="heightCm"
+                    name="heightCm"
+                    type="number"
+                    required
+                    placeholder="80, 100, 120..."
+                    data-testid="input-platform-height-cm"
+                  />
+                  <p className="text-xs text-muted-foreground">Para cálculo de multiplicador</p>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="category">Categoría *</Label>
+                <select
+                  id="category"
+                  name="category"
+                  required
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="select-platform-category"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="playground">Parque Infantil</option>
+                  <option value="house">Casita de Madera</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="priceDomestic">Precio Doméstico (Bs) *</Label>
+                  <Input
+                    id="priceDomestic"
+                    name="priceDomestic"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    data-testid="input-platform-price-domestic"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePublic">Precio Público (Bs) *</Label>
+                  <Input
+                    id="pricePublic"
+                    name="pricePublic"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    data-testid="input-platform-price-public"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAddPlatformDialogOpen(false)}
+                data-testid="button-cancel-platform"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={addPlatformMutation.isPending}
+                data-testid="button-submit-platform"
+              >
+                {addPlatformMutation.isPending ? "Agregando..." : "Agregar Plataforma"}
               </Button>
             </DialogFooter>
           </form>
