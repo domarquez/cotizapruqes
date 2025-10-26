@@ -7,7 +7,8 @@ export const platforms = pgTable("platforms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   height: text("height").notNull(),
   heightCm: integer("height_cm").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  priceDomestic: decimal("price_domestic", { precision: 10, scale: 2 }).notNull(),
+  pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
   category: text("category").notNull().default("playground"),
 });
 
@@ -16,7 +17,9 @@ export const modules = pgTable("modules", {
   name: text("name").notNull(),
   category: text("category").notNull(),
   material: text("material").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  materialPublic: text("material_public").notNull(),
+  priceDomestic: decimal("price_domestic", { precision: 10, scale: 2 }).notNull(),
+  pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
   productType: text("product_type").notNull(),
   description: text("description"),
 });
@@ -26,7 +29,8 @@ export const houses = pgTable("houses", {
   size: text("size").notNull(),
   width: decimal("width", { precision: 5, scale: 2 }).notNull(),
   length: decimal("length", { precision: 5, scale: 2 }).notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  priceDomestic: decimal("price_domestic", { precision: 10, scale: 2 }).notNull(),
+  pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
 });
 
 export const quotes = pgTable("quotes", {
@@ -35,6 +39,7 @@ export const quotes = pgTable("quotes", {
   clientEmail: text("client_email").notNull(),
   clientPhone: text("client_phone"),
   productType: text("product_type").notNull(),
+  useType: text("use_type").notNull(),
   configuration: text("configuration").notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),

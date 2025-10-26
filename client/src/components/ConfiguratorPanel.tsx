@@ -2,39 +2,98 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
 import { Button } from "@/components/ui/button";
 
 //todo: remove mock functionality
 const MOCK_PLATFORMS = [
-  { id: "p1", height: "80cm", price: 280000 },
-  { id: "p2", height: "90cm", price: 310000 },
-  { id: "p3", height: "1m", price: 340000 },
-  { id: "p4", height: "1.20m", price: 380000 },
-  { id: "p5", height: "1.50m", price: 450000 },
+  { id: "p1", height: "80cm", priceDomestic: 280000, pricePublic: 380000 },
+  { id: "p2", height: "90cm", priceDomestic: 310000, pricePublic: 420000 },
+  { id: "p3", height: "1m", priceDomestic: 340000, pricePublic: 460000 },
+  { id: "p4", height: "1.20m", priceDomestic: 380000, pricePublic: 520000 },
+  { id: "p5", height: "1.50m", priceDomestic: 450000, pricePublic: 620000 },
 ];
 
 //todo: remove mock functionality
 const MOCK_MODULES = {
   techos: [
-    { id: "t1", name: "Techo Madera", material: "Madera tratada", price: 120000 },
-    { id: "t2", name: "Techo Plástico", material: "Plástico HD", price: 85000 },
-    { id: "t3", name: "Techo Metálico", material: "Metal galvanizado", price: 150000 },
+    { 
+      id: "t1", 
+      name: "Techo Madera", 
+      materialDomestic: "Madera tratada", 
+      materialPublic: "Madera reforzada",
+      priceDomestic: 120000,
+      pricePublic: 180000
+    },
+    { 
+      id: "t2", 
+      name: "Techo Plástico", 
+      materialDomestic: "Plástico HD", 
+      materialPublic: "Plástico HD reforzado",
+      priceDomestic: 85000,
+      pricePublic: 135000
+    },
+    { 
+      id: "t3", 
+      name: "Techo Metálico", 
+      materialDomestic: "Metal galvanizado", 
+      materialPublic: "Metal reforzado antigolpes",
+      priceDomestic: 150000,
+      pricePublic: 220000
+    },
   ],
   resbalines: [
-    { id: "r1", name: "Resbalín Plástico", material: "Plástico HD", price: 85000 },
-    { id: "r2", name: "Resbalín Metálico", material: "Acero inoxidable", price: 140000 },
+    { 
+      id: "r1", 
+      name: "Resbalín Plástico", 
+      materialDomestic: "Plástico HD", 
+      materialPublic: "Plástico industrial reforzado",
+      priceDomestic: 85000,
+      pricePublic: 145000
+    },
+    { 
+      id: "r2", 
+      name: "Resbalín Metálico", 
+      materialDomestic: "Acero inoxidable", 
+      materialPublic: "Acero reforzado antigolpes",
+      priceDomestic: 140000,
+      pricePublic: 220000
+    },
   ],
   accesorios: [
-    { id: "a1", name: "Escalera Madera", material: "Madera tratada", price: 65000 },
-    { id: "a2", name: "Muro de Escalada", material: "Madera + Presas", price: 180000 },
-    { id: "a3", name: "Barras Horizontales", material: "Metal", price: 95000 },
+    { 
+      id: "a1", 
+      name: "Escalera Madera", 
+      materialDomestic: "Madera tratada", 
+      materialPublic: "Madera reforzada",
+      priceDomestic: 65000,
+      pricePublic: 95000
+    },
+    { 
+      id: "a2", 
+      name: "Muro de Escalada", 
+      materialDomestic: "Madera + Presas", 
+      materialPublic: "Madera reforzada + Presas industriales",
+      priceDomestic: 180000,
+      pricePublic: 280000
+    },
+    { 
+      id: "a3", 
+      name: "Barras Horizontales", 
+      materialDomestic: "Metal", 
+      materialPublic: "Metal reforzado",
+      priceDomestic: 95000,
+      pricePublic: 145000
+    },
   ],
 };
 
 export default function ConfiguratorPanel() {
   const [productType, setProductType] = useState<"playground" | "house">("playground");
+  const [useType, setUseType] = useState<"domestic" | "public">("domestic");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
 
@@ -55,10 +114,11 @@ export default function ConfiguratorPanel() {
     if (selectedPlatform) {
       const platform = MOCK_PLATFORMS.find(p => p.id === selectedPlatform);
       if (platform) {
+        const price = useType === "domestic" ? platform.priceDomestic : platform.pricePublic;
         items.push({
           id: platform.id,
-          name: `Plataforma ${platform.height}`,
-          price: platform.price,
+          name: `Plataforma ${platform.height} (${useType === "domestic" ? "Domicilio" : "Pública"})`,
+          price,
           quantity: 1,
         });
       }
@@ -66,10 +126,11 @@ export default function ConfiguratorPanel() {
 
     Object.values(MOCK_MODULES).flat().forEach(module => {
       if (selectedModules.has(module.id)) {
+        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
         items.push({
           id: module.id,
           name: module.name,
-          price: module.price,
+          price,
           quantity: 1,
         });
       }
@@ -80,6 +141,11 @@ export default function ConfiguratorPanel() {
 
   const handleQuantityChange = (id: string, delta: number) => {
     console.log(`Quantity change for ${id}: ${delta}`);
+  };
+
+  const resetSelection = () => {
+    setSelectedPlatform(null);
+    setSelectedModules(new Set());
   };
 
   return (
@@ -93,14 +159,77 @@ export default function ConfiguratorPanel() {
         </p>
       </div>
 
+      <div className="grid md:grid-cols-2 gap-4 mb-8">
+        <Card className={useType === "domestic" ? "ring-2 ring-primary" : ""}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Uso Domicilio
+              {useType === "domestic" && <Badge>Seleccionado</Badge>}
+            </CardTitle>
+            <CardDescription>
+              Para uso privado en casas y jardines particulares. Materiales estándar de alta calidad.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant={useType === "domestic" ? "default" : "outline"}
+              className="w-full hover-elevate active-elevate-2"
+              onClick={() => {
+                console.log("Switched to domestic");
+                setUseType("domestic");
+                resetSelection();
+              }}
+              data-testid="button-use-domestic"
+            >
+              {useType === "domestic" ? "Seleccionado" : "Seleccionar Domicilio"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className={useType === "public" ? "ring-2 ring-primary" : ""}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Uso Público
+              {useType === "public" && <Badge>Seleccionado</Badge>}
+            </CardTitle>
+            <CardDescription>
+              Para espacios públicos, colegios y plazas. Materiales reforzados y mayor durabilidad.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant={useType === "public" ? "default" : "outline"}
+              className="w-full hover-elevate active-elevate-2"
+              onClick={() => {
+                console.log("Switched to public");
+                setUseType("public");
+                resetSelection();
+              }}
+              data-testid="button-use-public"
+            >
+              {useType === "public" ? "Seleccionado" : "Seleccionar Público"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {useType === "public" && (
+        <Alert className="mb-8">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Uso Público:</strong> Los materiales son más reforzados y resistentes para soportar uso intensivo. 
+            Los precios incluyen tratamientos especiales y mayor espesor en estructuras.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex gap-4 mb-8">
         <Button
           variant={productType === "playground" ? "default" : "outline"}
           onClick={() => {
             console.log("Switched to playground");
             setProductType("playground");
-            setSelectedPlatform(null);
-            setSelectedModules(new Set());
+            resetSelection();
           }}
           className="hover-elevate active-elevate-2"
           data-testid="button-type-playground"
@@ -112,8 +241,7 @@ export default function ConfiguratorPanel() {
           onClick={() => {
             console.log("Switched to house");
             setProductType("house");
-            setSelectedPlatform(null);
-            setSelectedModules(new Set());
+            resetSelection();
           }}
           className="hover-elevate active-elevate-2"
           data-testid="button-type-house"
@@ -129,30 +257,39 @@ export default function ConfiguratorPanel() {
               <CardTitle>Paso 1: Selecciona la Plataforma Base</CardTitle>
               <CardDescription>
                 Elige la altura de la plataforma para tu {productType === "playground" ? "parque" : "casa"}
+                {useType === "public" && " (versión reforzada para uso público)"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {MOCK_PLATFORMS.map((platform) => (
-                  <button
-                    key={platform.id}
-                    onClick={() => {
-                      console.log(`Selected platform: ${platform.id}`);
-                      setSelectedPlatform(platform.id);
-                    }}
-                    className={`p-4 rounded-lg border-2 transition-all hover-elevate active-elevate-2 ${
-                      selectedPlatform === platform.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border"
-                    }`}
-                    data-testid={`button-platform-${platform.id}`}
-                  >
-                    <div className="font-semibold text-lg mb-1">{platform.height}</div>
-                    <div className="text-sm text-muted-foreground">
-                      ${platform.price.toLocaleString()}
-                    </div>
-                  </button>
-                ))}
+                {MOCK_PLATFORMS.map((platform) => {
+                  const price = useType === "domestic" ? platform.priceDomestic : platform.pricePublic;
+                  return (
+                    <button
+                      key={platform.id}
+                      onClick={() => {
+                        console.log(`Selected platform: ${platform.id}`);
+                        setSelectedPlatform(platform.id);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all hover-elevate active-elevate-2 ${
+                        selectedPlatform === platform.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border"
+                      }`}
+                      data-testid={`button-platform-${platform.id}`}
+                    >
+                      <div className="font-semibold text-lg mb-1">{platform.height}</div>
+                      <div className="text-sm text-muted-foreground">
+                        ${price.toLocaleString()}
+                      </div>
+                      {useType === "public" && (
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          Reforzada
+                        </Badge>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -163,6 +300,7 @@ export default function ConfiguratorPanel() {
                 <CardTitle>Paso 2: Agrega Módulos y Accesorios</CardTitle>
                 <CardDescription>
                   Personaliza tu {productType === "playground" ? "parque" : "casa"} con módulos adicionales
+                  {useType === "public" && " (materiales reforzados)"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -174,38 +312,62 @@ export default function ConfiguratorPanel() {
                   </TabsList>
                   <TabsContent value="techos" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.techos.map((module) => (
-                        <ModuleCard
-                          key={module.id}
-                          {...module}
-                          isSelected={selectedModules.has(module.id)}
-                          onToggle={() => toggleModule(module.id)}
-                        />
-                      ))}
+                      {MOCK_MODULES.techos.map((module) => {
+                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
+                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                        return (
+                          <ModuleCard
+                            key={module.id}
+                            id={module.id}
+                            name={module.name}
+                            material={material}
+                            price={price}
+                            isSelected={selectedModules.has(module.id)}
+                            onToggle={() => toggleModule(module.id)}
+                            useType={useType}
+                          />
+                        );
+                      })}
                     </div>
                   </TabsContent>
                   <TabsContent value="resbalines" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.resbalines.map((module) => (
-                        <ModuleCard
-                          key={module.id}
-                          {...module}
-                          isSelected={selectedModules.has(module.id)}
-                          onToggle={() => toggleModule(module.id)}
-                        />
-                      ))}
+                      {MOCK_MODULES.resbalines.map((module) => {
+                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
+                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                        return (
+                          <ModuleCard
+                            key={module.id}
+                            id={module.id}
+                            name={module.name}
+                            material={material}
+                            price={price}
+                            isSelected={selectedModules.has(module.id)}
+                            onToggle={() => toggleModule(module.id)}
+                            useType={useType}
+                          />
+                        );
+                      })}
                     </div>
                   </TabsContent>
                   <TabsContent value="accesorios" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.accesorios.map((module) => (
-                        <ModuleCard
-                          key={module.id}
-                          {...module}
-                          isSelected={selectedModules.has(module.id)}
-                          onToggle={() => toggleModule(module.id)}
-                        />
-                      ))}
+                      {MOCK_MODULES.accesorios.map((module) => {
+                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
+                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                        return (
+                          <ModuleCard
+                            key={module.id}
+                            id={module.id}
+                            name={module.name}
+                            material={material}
+                            price={price}
+                            isSelected={selectedModules.has(module.id)}
+                            onToggle={() => toggleModule(module.id)}
+                            useType={useType}
+                          />
+                        );
+                      })}
                     </div>
                   </TabsContent>
                 </Tabs>

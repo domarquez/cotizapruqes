@@ -10,6 +10,7 @@ interface ModuleCardProps {
   price: number;
   isSelected: boolean;
   onToggle: () => void;
+  useType?: "domestic" | "public";
 }
 
 export default function ModuleCard({
@@ -19,6 +20,7 @@ export default function ModuleCard({
   price,
   isSelected,
   onToggle,
+  useType = "domestic",
 }: ModuleCardProps) {
   return (
     <Card
@@ -38,6 +40,11 @@ export default function ModuleCard({
             <Badge variant="secondary" className="text-xs" data-testid={`badge-material-${id}`}>
               {material}
             </Badge>
+            {useType === "public" && (
+              <Badge variant="default" className="text-xs ml-2">
+                Reforzado
+              </Badge>
+            )}
           </div>
           <div
             className={cn(
