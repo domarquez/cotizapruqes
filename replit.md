@@ -2,7 +2,18 @@
 
 ## Overview
 
-A modular quotation system for playground equipment and wooden houses. This web application allows customers to configure custom playground structures or wooden houses by selecting base platforms and adding modular components, with real-time pricing based on usage type (domestic vs. public/institutional). The system includes an admin panel for managing inventory and pricing, and generates quotations with client information that can be saved or exported as PDFs.
+A modular quotation system for playground equipment and wooden houses for the Bolivian market (Mobiliario Urbano). This web application allows customers to configure custom playground structures or wooden houses by selecting base platforms and adding modular components, with real-time pricing based on usage type (domestic vs. public/institutional). 
+
+**Dynamic Pricing System:**
+- Module prices in database are base prices for 1m x 1m platforms
+- System automatically adjusts module pricing based on selected platform size:
+  - 80cm platforms: modules cost 0.8x base price (20% discount)
+  - 100cm platforms: modules cost 1.0x base price (base)
+  - 120cm+ platforms: modules cost 1.2x base price (20% premium)
+- Admin panel manages only base prices (1m x 1m); all other sizes calculate automatically
+- Modules can only be selected after choosing a platform to ensure correct pricing
+
+The system includes an admin panel for managing base inventory pricing, and generates quotations with client information that can be saved or exported as PDFs. All prices displayed in Bolivianos (Bs).
 
 ## User Preferences
 
@@ -150,3 +161,29 @@ System requires implementation of proper authentication:
 
 **Asset Management:**
 Generated images stored in `attached_assets/generated_images/` referenced via Vite aliases
+
+### Pricing Logic
+
+**Dynamic Module Pricing (shared/pricing.ts):**
+The application implements platform size-based pricing multipliers for modules:
+
+```typescript
+PLATFORM_MULTIPLIERS = {
+  80: 0.8,   // Small platforms (80cm) - 20% discount
+  100: 1.0,  // Base platforms (1m) - base price
+  120: 1.2,  // Large platforms (120cm+) - 20% premium
+  150: 1.2   // Extra large platforms (1.5m) - 20% premium
+}
+```
+
+**Implementation Details:**
+- `getPlatformMultiplier(platform)`: Returns multiplier for a given platform
+- `getAdjustedModulePrice(module, platform, useType)`: Calculates final module price
+- Applied in ConfiguratorPanel when rendering ModuleCards and calculating totals
+- Modules reset when platform changes to prevent stale pricing
+- useRef tracks previous platform to avoid resetting on data refetches
+
+**Admin Workflow:**
+1. Admin sets base module prices (for 1m x 1m platforms) in admin panel
+2. Frontend automatically calculates adjusted prices for other platform sizes
+3. No need to manage multiple price points per module per platform size

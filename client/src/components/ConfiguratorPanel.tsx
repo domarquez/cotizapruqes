@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,30 +16,11 @@ export default function ConfiguratorPanel() {
   const [useType, setUseType] = useState<"domestic" | "public">("domestic");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
+  const prevPlatformRef = useRef<string | null>(null);
 
   const { data: platforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
     queryKey: ["/api/platforms"],
   });
-
-  // Reset modules when platform changes to avoid stale pricing
-  useEffect(() => {
-    if (selectedPlatform) {
-      setSelectedModules(new Set());
-      setItemQuantities(prev => {
-        const newQuantities = { ...prev };
-        // Keep only the platform quantity
-        Object.keys(newQuantities).forEach(id => {
-          if (id !== selectedPlatform) {
-            const isModule = modules.some(m => m.id === id);
-            if (isModule) {
-              delete newQuantities[id];
-            }
-          }
-        });
-        return newQuantities;
-      });
-    }
-  }, [selectedPlatform]);
 
   const { data: modules = [], isLoading: loadingModules } = useQuery<Module[]>({
     queryKey: ["/api/modules"],
@@ -50,6 +31,30 @@ export default function ConfiguratorPanel() {
   });
 
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
+
+  // Reset modules when platform changes to avoid stale pricing
+  useEffect(() => {
+    // Only reset if platform actually changed (not just on refetch)
+    if (prevPlatformRef.current !== selectedPlatform) {
+      prevPlatformRef.current = selectedPlatform;
+      setSelectedModules(new Set());
+      setItemQuantities(prev => {
+        const newQuantities = { ...prev };
+        // Remove all module quantities, keeping only platform/house quantities
+        Object.keys(newQuantities).forEach(id => {
+          if (id !== selectedPlatform) {
+            // Check if it's a module (not a platform or house)
+            const isPlatform = platforms.some(p => p.id === id);
+            const isHouse = houses.some(h => h.id === id);
+            if (!isPlatform && !isHouse) {
+              delete newQuantities[id];
+            }
+          }
+        });
+        return newQuantities;
+      });
+    }
+  }, [selectedPlatform, platforms, houses]);
 
   const toggleModule = (moduleId: string) => {
     const newSelected = new Set(selectedModules);
