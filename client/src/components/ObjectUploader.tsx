@@ -1,13 +1,8 @@
 // Referenced from blueprint: javascript_object_storage
-import { useState } from "react";
-import type { ReactNode } from "react";
-import Uppy from "@uppy/core";
-import { DashboardModal } from "@uppy/react";
-import "@uppy/core/dist/style.min.css";
-import "@uppy/dashboard/dist/style.min.css";
-import AwsS3 from "@uppy/aws-s3";
-import type { UploadResult } from "@uppy/core";
+// Simplified version without Uppy Dashboard UI to avoid CSS import issues
+import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -16,40 +11,14 @@ interface ObjectUploaderProps {
     method: "PUT";
     url: string;
   }>;
-  onComplete?: (
-    result: UploadResult<Record<string, unknown>, Record<string, unknown>>
-  ) => void;
+  onComplete?: (result: { successful: Array<{ uploadURL: string }> }) => void;
   buttonClassName?: string;
   children: ReactNode;
 }
 
 /**
- * A file upload component that renders as a button and provides a modal interface for
- * file management.
- * 
- * Features:
- * - Renders as a customizable button that opens a file upload modal
- * - Provides a modal interface for:
- *   - File selection
- *   - File preview
- *   - Upload progress tracking
- *   - Upload status display
- * 
- * The component uses Uppy under the hood to handle all file upload functionality.
- * All file management features are automatically handled by the Uppy dashboard modal.
- * 
- * @param props - Component props
- * @param props.maxNumberOfFiles - Maximum number of files allowed to be uploaded
- *   (default: 1)
- * @param props.maxFileSize - Maximum file size in bytes (default: 10MB)
- * @param props.onGetUploadParameters - Function to get upload parameters (method and URL).
- *   Typically used to fetch a presigned URL from the backend server for direct-to-S3
- *   uploads.
- * @param props.onComplete - Callback function called when upload is complete. Typically
- *   used to make post-upload API calls to update server state and set object ACL
- *   policies.
- * @param props.buttonClassName - Optional CSS class name for the button
- * @param props.children - Content to be rendered inside the button
+ * A simplified file upload component for object storage
+ * Uses native file input instead of Uppy Dashboard to avoid CSS dependency issues
  */
 export function ObjectUploader({
   maxNumberOfFiles = 1,
@@ -59,42 +28,91 @@ export function ObjectUploader({
   buttonClassName,
   children,
 }: ObjectUploaderProps) {
-  const [showModal, setShowModal] = useState(false);
-  const [uppy] = useState(() =>
-    new Uppy({
-      restrictions: {
-        maxNumberOfFiles,
-        maxFileSize,
-        allowedFileTypes: ['image/*'],
-      },
-      autoProceed: false,
-    })
-      .use(AwsS3, {
-        shouldUseMultipart: false,
-        getUploadParameters: onGetUploadParameters,
-      })
-      .on("complete", (result) => {
-        onComplete?.(result);
-        setShowModal(false);
-      })
-  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > maxFileSize) {
+      toast({
+        title: "Archivo demasiado grande",
+        description: `El archivo debe ser menor a ${Math.round(maxFileSize / 1024 / 1024)}MB`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type (images only)
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Tipo de archivo inválido",
+        description: "Solo se permiten imágenes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get upload URL from backend
+      const uploadParams = await onGetUploadParameters();
+      
+      // Upload file to object storage
+      const response = await fetch(uploadParams.url, {
+        method: uploadParams.method,
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      // Call completion handler
+      onComplete?.({
+        successful: [{
+          uploadURL: uploadParams.url.split('?')[0], // Remove query params
+        }],
+      });
+
+      toast({
+        title: "Imagen subida exitosamente",
+      });
+
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Error al subir imagen",
+        description: "Inténtalo de nuevo",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div>
-      <Button 
+      <Button
         type="button"
-        onClick={() => setShowModal(true)} 
+        onClick={() => fileInputRef.current?.click()}
         className={buttonClassName}
         data-testid="button-upload-image"
       >
         {children}
       </Button>
-
-      <DashboardModal
-        uppy={uppy}
-        open={showModal}
-        onRequestClose={() => setShowModal(false)}
-        proudlyDisplayPoweredByUppy={false}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
       />
     </div>
   );

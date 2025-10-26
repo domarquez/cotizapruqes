@@ -22,13 +22,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2, Plus, LogOut } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, Image as ImageIcon } from "lucide-react";
 import InlineEditInput from "@/components/InlineEditInput";
-import ImageUpload from "@/components/ImageUpload";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import AdminLogin from "@/components/AdminLogin";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Platform, Module } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -128,6 +129,32 @@ export default function Admin() {
     },
   });
 
+  const updatePlatformImageMutation = useMutation({
+    mutationFn: async ({ id, imageUrl }: { id: string; imageUrl: string }) => {
+      return await apiRequest("PUT", `/api/platforms/${id}/image`, { imageUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({ title: "Imagen actualizada" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar imagen", variant: "destructive" });
+    },
+  });
+
+  const updateModuleImageMutation = useMutation({
+    mutationFn: async ({ id, imageUrl }: { id: string; imageUrl: string }) => {
+      return await apiRequest("PUT", `/api/modules/${id}/image`, { imageUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
+      toast({ title: "Imagen actualizada" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar imagen", variant: "destructive" });
+    },
+  });
+
   const handleLogout = () => {
     setIsAuthenticated(false);
   };
@@ -200,6 +227,7 @@ export default function Admin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Imagen</TableHead>
                       <TableHead>Altura</TableHead>
                       <TableHead>Categoría</TableHead>
                       <TableHead>Precio Doméstico (Bs)</TableHead>
@@ -210,6 +238,48 @@ export default function Admin() {
                   <TableBody>
                     {platforms.map((platform) => (
                       <TableRow key={platform.id} data-testid={`row-platform-${platform.id}`}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {platform.imageUrl ? (
+                              <img 
+                                src={platform.imageUrl} 
+                                alt={platform.height}
+                                className="w-12 h-12 object-cover rounded"
+                                data-testid={`img-platform-${platform.id}`}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              onGetUploadParameters={async () => {
+                                const response = await fetch("/api/objects/upload", {
+                                  method: "POST",
+                                });
+                                const data = await response.json();
+                                return {
+                                  method: "PUT" as const,
+                                  url: data.uploadURL,
+                                };
+                              }}
+                              onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const uploadedUrl = result.successful[0].uploadURL;
+                                  updatePlatformImageMutation.mutate({
+                                    id: platform.id,
+                                    imageUrl: uploadedUrl,
+                                  });
+                                }
+                              }}
+                              buttonClassName="h-8"
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </ObjectUploader>
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">
                           <InlineEditInput
                             value={platform.height}
@@ -285,6 +355,7 @@ export default function Admin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Imagen</TableHead>
                       <TableHead>Nombre</TableHead>
                       <TableHead>Material Doméstico</TableHead>
                       <TableHead>Material Público</TableHead>
@@ -296,6 +367,48 @@ export default function Admin() {
                   <TableBody>
                     {modules.map((module) => (
                       <TableRow key={module.id} data-testid={`row-module-${module.id}`}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {module.imageUrl ? (
+                              <img 
+                                src={module.imageUrl} 
+                                alt={module.name}
+                                className="w-12 h-12 object-cover rounded"
+                                data-testid={`img-module-${module.id}`}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              onGetUploadParameters={async () => {
+                                const response = await fetch("/api/objects/upload", {
+                                  method: "POST",
+                                });
+                                const data = await response.json();
+                                return {
+                                  method: "PUT" as const,
+                                  url: data.uploadURL,
+                                };
+                              }}
+                              onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const uploadedUrl = result.successful[0].uploadURL;
+                                  updateModuleImageMutation.mutate({
+                                    id: module.id,
+                                    imageUrl: uploadedUrl,
+                                  });
+                                }
+                              }}
+                              buttonClassName="h-8"
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </ObjectUploader>
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">
                           <InlineEditInput
                             value={module.name}
