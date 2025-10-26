@@ -18,7 +18,7 @@ export default function ConfiguratorPanel() {
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const prevPlatformRef = useRef<string | null>(null);
 
-  const { data: platforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
+  const { data: allPlatforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
     queryKey: ["/api/platforms"],
   });
 
@@ -26,9 +26,8 @@ export default function ConfiguratorPanel() {
     queryKey: ["/api/modules"],
   });
 
-  const { data: houses = [], isLoading: loadingHouses } = useQuery<any[]>({
-    queryKey: ["/api/houses"],
-  });
+  // Filter platforms by category
+  const platforms = allPlatforms.filter(p => p.category === productType);
 
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
 
@@ -40,13 +39,12 @@ export default function ConfiguratorPanel() {
       setSelectedModules(new Set());
       setItemQuantities(prev => {
         const newQuantities = { ...prev };
-        // Remove all module quantities, keeping only platform/house quantities
+        // Remove all module quantities, keeping only platform quantities
         Object.keys(newQuantities).forEach(id => {
           if (id !== selectedPlatform) {
-            // Check if it's a module (not a platform or house)
-            const isPlatform = platforms.some(p => p.id === id);
-            const isHouse = houses.some(h => h.id === id);
-            if (!isPlatform && !isHouse) {
+            // Check if it's a module (not a platform)
+            const isPlatform = allPlatforms.some(p => p.id === id);
+            if (!isPlatform) {
               delete newQuantities[id];
             }
           }
@@ -54,7 +52,7 @@ export default function ConfiguratorPanel() {
         return newQuantities;
       });
     }
-  }, [selectedPlatform, platforms, houses]);
+  }, [selectedPlatform, allPlatforms]);
 
   const toggleModule = (moduleId: string) => {
     const newSelected = new Set(selectedModules);
@@ -94,15 +92,15 @@ export default function ConfiguratorPanel() {
     }
 
     if (productType === "house" && selectedPlatform) {
-      const house = houses.find(h => h.id === selectedPlatform);
-      if (house) {
+      const housePlatform = platforms.find(p => p.id === selectedPlatform);
+      if (housePlatform) {
         const price = useType === "domestic" 
-          ? parseFloat(house.priceDomestic) 
-          : parseFloat(house.pricePublic);
-        const quantity = itemQuantities[house.id] || 1;
+          ? parseFloat(housePlatform.priceDomestic) 
+          : parseFloat(housePlatform.pricePublic);
+        const quantity = itemQuantities[housePlatform.id] || 1;
         items.push({
-          id: house.id,
-          name: `Casa ${house.size} (${useType === "domestic" ? "Domicilio" : "Pública"})`,
+          id: housePlatform.id,
+          name: `Casa ${housePlatform.height} (${useType === "domestic" ? "Domicilio" : "Pública"})`,
           price,
           quantity,
         });
@@ -162,7 +160,7 @@ export default function ConfiguratorPanel() {
     }),
   };
 
-  if (loadingPlatforms || loadingModules || loadingHouses) {
+  if (loadingPlatforms || loadingModules) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <p className="text-center text-muted-foreground">Cargando configurador...</p>
@@ -170,7 +168,7 @@ export default function ConfiguratorPanel() {
     );
   }
 
-  const displayItems = productType === "playground" ? platforms : houses;
+  const displayItems = platforms;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
