@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema } from "@shared/schema";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // PLATFORMS
@@ -146,6 +147,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating quote:", error);
       res.status(400).json({ error: "Invalid quote data" });
+    }
+  });
+
+  // OBJECT STORAGE - Image uploads
+  // Referenced from blueprint: javascript_object_storage (public file uploading)
+  
+  // Endpoint for serving uploaded objects (images)
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Endpoint for getting upload URL
+  app.post("/api/objects/upload", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+    res.json({ uploadURL });
+  });
+
+  // Endpoint for updating platform image after upload
+  app.put("/api/platforms/:id/image", async (req, res) => {
+    if (!req.body.imageUrl) {
+      return res.status(400).json({ error: "imageUrl is required" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.imageUrl,
+      );
+
+      // Update platform with the image path
+      const platform = await storage.updatePlatform(req.params.id, {
+        imageUrl: objectPath,
+      });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        platform,
+      });
+    } catch (error) {
+      console.error("Error setting platform image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Endpoint for updating module image after upload
+  app.put("/api/modules/:id/image", async (req, res) => {
+    if (!req.body.imageUrl) {
+      return res.status(400).json({ error: "imageUrl is required" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.imageUrl,
+      );
+
+      // Update module with the image path
+      const module = await storage.updateModule(req.params.id, {
+        imageUrl: objectPath,
+      });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        module,
+      });
+    } catch (error) {
+      console.error("Error setting module image:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
