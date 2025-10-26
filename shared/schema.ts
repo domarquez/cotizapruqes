@@ -10,6 +10,7 @@ export const platforms = pgTable("platforms", {
   priceDomestic: decimal("price_domestic", { precision: 10, scale: 2 }).notNull(),
   pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
   category: text("category").notNull().default("playground"),
+  imageUrl: text("image_url"),
 });
 
 export const modules = pgTable("modules", {
@@ -22,6 +23,7 @@ export const modules = pgTable("modules", {
   pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
   productType: text("product_type").notNull(),
   description: text("description"),
+  imageUrl: text("image_url"),
 });
 
 export const quotes = pgTable("quotes", {
