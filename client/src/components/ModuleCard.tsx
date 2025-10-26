@@ -11,6 +11,7 @@ interface ModuleCardProps {
   isSelected: boolean;
   onToggle: () => void;
   useType?: "domestic" | "public";
+  imageUrl?: string | null;
 }
 
 export default function ModuleCard({
@@ -21,16 +22,26 @@ export default function ModuleCard({
   isSelected,
   onToggle,
   useType = "domestic",
+  imageUrl,
 }: ModuleCardProps) {
   return (
     <Card
       className={cn(
-        "cursor-pointer hover-elevate active-elevate-2 transition-all relative",
+        "cursor-pointer hover-elevate active-elevate-2 transition-all relative overflow-hidden",
         isSelected && "ring-2 ring-primary"
       )}
       onClick={onToggle}
       data-testid={`card-module-${id}`}
     >
+      {imageUrl && (
+        <div className="w-full h-40 bg-muted overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">

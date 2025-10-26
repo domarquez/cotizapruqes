@@ -294,22 +294,33 @@ export default function ConfiguratorPanel() {
                         setSelectedPlatform(item.id);
                         setItemQuantities({ ...itemQuantities, [item.id]: 1 });
                       }}
-                      className={`p-4 rounded-lg border-2 transition-all hover-elevate active-elevate-2 ${
+                      className={`rounded-lg border-2 transition-all hover-elevate active-elevate-2 overflow-hidden ${
                         selectedPlatform === item.id
                           ? "border-primary bg-primary/5"
                           : "border-border"
                       }`}
                       data-testid={`button-${productType}-${item.id}`}
                     >
-                      <div className="font-semibold text-lg mb-1">{label}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Bs {price.toLocaleString()}
-                      </div>
-                      {useType === "public" && (
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          Reforzada
-                        </Badge>
+                      {item.imageUrl && (
+                        <div className="w-full h-32 bg-muted overflow-hidden">
+                          <img
+                            src={item.imageUrl}
+                            alt={label}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       )}
+                      <div className="p-4">
+                        <div className="font-semibold text-lg mb-1">{label}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Bs {price.toLocaleString()}
+                        </div>
+                        {useType === "public" && (
+                          <Badge variant="secondary" className="mt-2 text-xs">
+                            Reforzada
+                          </Badge>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -349,6 +360,7 @@ export default function ConfiguratorPanel() {
                             isSelected={selectedModules.has(module.id)}
                             onToggle={() => toggleModule(module.id)}
                             useType={useType}
+                            imageUrl={module.imageUrl}
                           />
                         );
                       })}
@@ -370,6 +382,7 @@ export default function ConfiguratorPanel() {
                             isSelected={selectedModules.has(module.id)}
                             onToggle={() => toggleModule(module.id)}
                             useType={useType}
+                            imageUrl={module.imageUrl}
                           />
                         );
                       })}
@@ -391,6 +404,7 @@ export default function ConfiguratorPanel() {
                             isSelected={selectedModules.has(module.id)}
                             onToggle={() => toggleModule(module.id)}
                             useType={useType}
+                            imageUrl={module.imageUrl}
                           />
                         );
                       })}
