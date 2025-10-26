@@ -107,21 +107,20 @@ export default function ConfiguratorPanel() {
       }
     }
 
-    if (productType === "playground") {
-      modules.forEach(module => {
-        if (selectedModules.has(module.id)) {
-          // Calculate adjusted price based on platform size
-          const price = getAdjustedModulePrice(module, currentPlatform, useType);
-          const quantity = itemQuantities[module.id] || 1;
-          items.push({
-            id: module.id,
-            name: module.name,
-            price,
-            quantity,
-          });
-        }
-      });
-    }
+    // Add modules for both playground and house platforms
+    modules.forEach(module => {
+      if (selectedModules.has(module.id)) {
+        // Calculate adjusted price based on platform size
+        const price = getAdjustedModulePrice(module, currentPlatform, useType);
+        const quantity = itemQuantities[module.id] || 1;
+        items.push({
+          id: module.id,
+          name: module.name,
+          price,
+          quantity,
+        });
+      }
+    });
 
     return items;
   };
@@ -139,24 +138,25 @@ export default function ConfiguratorPanel() {
   };
 
   // Filter modules by category and availability (price > 0)
+  // Modules work for both playground and house platforms
   const modulesByCategory = {
     techos: modules.filter(m => {
       const price = useType === "domestic" 
         ? parseFloat(m.priceDomestic) 
         : parseFloat(m.pricePublic);
-      return m.category === "techos" && m.productType === "playground" && price > 0;
+      return m.category === "techos" && price > 0;
     }),
     resbalines: modules.filter(m => {
       const price = useType === "domestic" 
         ? parseFloat(m.priceDomestic) 
         : parseFloat(m.pricePublic);
-      return m.category === "resbalines" && m.productType === "playground" && price > 0;
+      return m.category === "resbalines" && price > 0;
     }),
     accesorios: modules.filter(m => {
       const price = useType === "domestic" 
         ? parseFloat(m.priceDomestic) 
         : parseFloat(m.pricePublic);
-      return m.category === "accesorios" && m.productType === "playground" && price > 0;
+      return m.category === "accesorios" && price > 0;
     }),
   };
 
@@ -317,7 +317,7 @@ export default function ConfiguratorPanel() {
             </CardContent>
           </Card>
 
-          {selectedPlatform && productType === "playground" && (
+          {selectedPlatform && (
             <Card data-testid="card-modules-selection">
               <CardHeader>
                 <CardTitle>Paso 2: Agrega Módulos y Accesorios</CardTitle>
