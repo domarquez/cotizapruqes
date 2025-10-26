@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,67 +26,90 @@ import { Pencil, Trash2, Plus, LogOut } from "lucide-react";
 import InlineEditInput from "@/components/InlineEditInput";
 import ImageUpload from "@/components/ImageUpload";
 import AdminLogin from "@/components/AdminLogin";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import type { Platform, Module } from "@shared/schema";
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addPlatformDialogOpen, setAddPlatformDialogOpen] = useState(false);
+  const [addModuleDialogOpen, setAddModuleDialogOpen] = useState(false);
   const [editImageDialogOpen, setEditImageDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const { toast } = useToast();
 
-  //todo: remove mock functionality
-  const [platforms, setPlatforms] = useState([
-    { id: "1", height: "80cm", priceDomestic: "280000", pricePublic: "380000" },
-    { id: "2", height: "90cm", priceDomestic: "310000", pricePublic: "420000" },
-    { id: "3", height: "1m", priceDomestic: "340000", pricePublic: "460000" },
-  ]);
+  const { data: platforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
+    queryKey: ["/api/platforms"],
+    enabled: isAuthenticated,
+  });
 
-  //todo: remove mock functionality
-  const [modules, setModules] = useState([
-    { 
-      id: "1", 
-      name: "Techo Madera", 
-      materialDomestic: "Madera tratada",
-      materialPublic: "Madera reforzada",
-      priceDomestic: "120000",
-      pricePublic: "180000"
+  const { data: modules = [], isLoading: loadingModules } = useQuery<Module[]>({
+    queryKey: ["/api/modules"],
+    enabled: isAuthenticated,
+  });
+
+  const updatePlatformMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/platforms/${id}`, data);
     },
-    { 
-      id: "2", 
-      name: "Resbalín Plástico", 
-      materialDomestic: "Plástico HD",
-      materialPublic: "Plástico industrial",
-      priceDomestic: "85000",
-      pricePublic: "145000"
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({ title: "Plataforma actualizada" });
     },
-  ]);
+    onError: () => {
+      toast({ title: "Error al actualizar", variant: "destructive" });
+    },
+  });
+
+  const deletePlatformMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/platforms/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({ title: "Plataforma eliminada" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar", variant: "destructive" });
+    },
+  });
+
+  const updateModuleMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/modules/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
+      toast({ title: "Módulo actualizado" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar", variant: "destructive" });
+    },
+  });
+
+  const deleteModuleMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/modules/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
+      toast({ title: "Módulo eliminado" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar", variant: "destructive" });
+    },
+  });
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    console.log("Admin logged out");
   };
 
-  const updatePlatformPrice = (id: string, field: string, value: string) => {
-    setPlatforms(platforms.map(p => 
-      p.id === id ? { ...p, [field]: value } : p
-    ));
-    console.log(`Updated platform ${id} ${field} to ${value}`);
+  const updatePlatformField = (id: string, field: string, value: string) => {
+    updatePlatformMutation.mutate({ id, data: { [field]: value } });
   };
 
   const updateModuleField = (id: string, field: string, value: string) => {
-    setModules(modules.map(m => 
-      m.id === id ? { ...m, [field]: value } : m
-    ));
-    console.log(`Updated module ${id} ${field} to ${value}`);
-  };
-
-  const deletePlatform = (id: string) => {
-    setPlatforms(platforms.filter(p => p.id !== id));
-    console.log(`Deleted platform ${id}`);
-  };
-
-  const deleteModule = (id: string) => {
-    setModules(modules.filter(m => m.id !== id));
-    console.log(`Deleted module ${id}`);
+    updateModuleMutation.mutate({ id, data: { [field]: value } });
   };
 
   if (!isAuthenticated) {
@@ -131,103 +155,71 @@ export default function Admin() {
                     Haz clic en los valores para editarlos en línea
                   </CardDescription>
                 </div>
-                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="hover-elevate active-elevate-2"
-                      data-testid="button-add-platform"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Agregar Nueva Plataforma</DialogTitle>
-                      <DialogDescription>
-                        Ingresa los datos de la nueva plataforma
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="height">Altura</Label>
-                        <Input id="height" placeholder="Ej: 1.80m" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="price-domestic">Precio Doméstico (CLP)</Label>
-                        <Input id="price-domestic" type="number" placeholder="450000" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="price-public">Precio Público (CLP)</Label>
-                        <Input id="price-public" type="number" placeholder="620000" />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button 
-                        onClick={() => {
-                          console.log("Platform added");
-                          setAddDialogOpen(false);
-                        }}
-                        className="hover-elevate active-elevate-2"
-                      >
-                        Guardar
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  className="hover-elevate active-elevate-2"
+                  data-testid="button-add-platform"
+                  onClick={() => setAddPlatformDialogOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Altura</TableHead>
-                    <TableHead>Precio Doméstico (CLP)</TableHead>
-                    <TableHead>Precio Público (CLP)</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {platforms.map((platform) => (
-                    <TableRow key={platform.id} data-testid={`row-platform-${platform.id}`}>
-                      <TableCell className="font-medium">
-                        <InlineEditInput
-                          value={platform.height}
-                          onSave={(value) => updatePlatformPrice(platform.id, "height", value)}
-                          testId={`platform-${platform.id}-height`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={platform.priceDomestic}
-                          onSave={(value) => updatePlatformPrice(platform.id, "priceDomestic", value)}
-                          type="number"
-                          testId={`platform-${platform.id}-domestic`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={platform.pricePublic}
-                          onSave={(value) => updatePlatformPrice(platform.id, "pricePublic", value)}
-                          type="number"
-                          testId={`platform-${platform.id}-public`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 hover-elevate active-elevate-2"
-                          onClick={() => deletePlatform(platform.id)}
-                          data-testid={`button-delete-platform-${platform.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
+              {loadingPlatforms ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Altura</TableHead>
+                      <TableHead>Precio Doméstico (CLP)</TableHead>
+                      <TableHead>Precio Público (CLP)</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {platforms.map((platform) => (
+                      <TableRow key={platform.id} data-testid={`row-platform-${platform.id}`}>
+                        <TableCell className="font-medium">
+                          <InlineEditInput
+                            value={platform.height}
+                            onSave={(value) => updatePlatformField(platform.id, "height", value)}
+                            testId={`platform-${platform.id}-height`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={platform.priceDomestic}
+                            onSave={(value) => updatePlatformField(platform.id, "priceDomestic", value)}
+                            type="number"
+                            testId={`platform-${platform.id}-domestic`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={platform.pricePublic}
+                            onSave={(value) => updatePlatformField(platform.id, "pricePublic", value)}
+                            type="number"
+                            testId={`platform-${platform.id}-public`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 hover-elevate active-elevate-2"
+                            onClick={() => deletePlatformMutation.mutate(platform.id)}
+                            data-testid={`button-delete-platform-${platform.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -244,7 +236,7 @@ export default function Admin() {
                 </div>
                 <Button 
                   className="hover-elevate active-elevate-2"
-                  onClick={() => console.log("Add module")}
+                  onClick={() => setAddModuleDialogOpen(true)}
                   data-testid="button-add-module"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -253,118 +245,76 @@ export default function Admin() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Material Doméstico</TableHead>
-                    <TableHead>Material Público</TableHead>
-                    <TableHead>Precio Dom.</TableHead>
-                    <TableHead>Precio Púb.</TableHead>
-                    <TableHead>Imagen</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {modules.map((module) => (
-                    <TableRow key={module.id} data-testid={`row-module-${module.id}`}>
-                      <TableCell className="font-medium">
-                        <InlineEditInput
-                          value={module.name}
-                          onSave={(value) => updateModuleField(module.id, "name", value)}
-                          testId={`module-${module.id}-name`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={module.materialDomestic}
-                          onSave={(value) => updateModuleField(module.id, "materialDomestic", value)}
-                          testId={`module-${module.id}-mat-dom`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={module.materialPublic}
-                          onSave={(value) => updateModuleField(module.id, "materialPublic", value)}
-                          testId={`module-${module.id}-mat-pub`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={module.priceDomestic}
-                          onSave={(value) => updateModuleField(module.id, "priceDomestic", value)}
-                          type="number"
-                          testId={`module-${module.id}-price-dom`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <InlineEditInput
-                          value={module.pricePublic}
-                          onSave={(value) => updateModuleField(module.id, "pricePublic", value)}
-                          type="number"
-                          testId={`module-${module.id}-price-pub`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Dialog open={editImageDialogOpen && selectedItem?.id === module.id} 
-                                onOpenChange={(open) => {
-                                  setEditImageDialogOpen(open);
-                                  if (!open) setSelectedItem(null);
-                                }}>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedItem(module)}
-                              className="hover-elevate active-elevate-2"
-                              data-testid={`button-edit-image-${module.id}`}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" />
-                              Editar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Cambiar Imagen</DialogTitle>
-                              <DialogDescription>
-                                Sube una nueva imagen para {module.name}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <ImageUpload
-                              onImageChange={(file) => console.log("Image changed:", file)}
-                              label="Imagen del Módulo"
-                              testId={`module-${module.id}-image`}
-                            />
-                            <DialogFooter>
-                              <Button 
-                                onClick={() => {
-                                  console.log("Image saved");
-                                  setEditImageDialogOpen(false);
-                                  setSelectedItem(null);
-                                }}
-                                className="hover-elevate active-elevate-2"
-                              >
-                                Guardar
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 hover-elevate active-elevate-2"
-                          onClick={() => deleteModule(module.id)}
-                          data-testid={`button-delete-module-${module.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
+              {loadingModules ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Material Doméstico</TableHead>
+                      <TableHead>Material Público</TableHead>
+                      <TableHead>Precio Dom.</TableHead>
+                      <TableHead>Precio Púb.</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {modules.map((module) => (
+                      <TableRow key={module.id} data-testid={`row-module-${module.id}`}>
+                        <TableCell className="font-medium">
+                          <InlineEditInput
+                            value={module.name}
+                            onSave={(value) => updateModuleField(module.id, "name", value)}
+                            testId={`module-${module.id}-name`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={module.material}
+                            onSave={(value) => updateModuleField(module.id, "material", value)}
+                            testId={`module-${module.id}-mat-dom`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={module.materialPublic}
+                            onSave={(value) => updateModuleField(module.id, "materialPublic", value)}
+                            testId={`module-${module.id}-mat-pub`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={module.priceDomestic}
+                            onSave={(value) => updateModuleField(module.id, "priceDomestic", value)}
+                            type="number"
+                            testId={`module-${module.id}-price-dom`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={module.pricePublic}
+                            onSave={(value) => updateModuleField(module.id, "pricePublic", value)}
+                            type="number"
+                            testId={`module-${module.id}-price-pub`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 hover-elevate active-elevate-2"
+                            onClick={() => deleteModuleMutation.mutate(module.id)}
+                            data-testid={`button-delete-module-${module.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

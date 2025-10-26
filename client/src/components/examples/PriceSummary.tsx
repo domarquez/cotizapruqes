@@ -9,7 +9,6 @@ export default function PriceSummaryExample() {
   ]);
 
   const handleQuantityChange = (id: string, delta: number) => {
-    console.log(`Quantity changed for ${id} by ${delta}`);
     setItems(items.map(item =>
       item.id === id
         ? { ...item, quantity: Math.max(1, item.quantity + delta) }
@@ -22,8 +21,7 @@ export default function PriceSummaryExample() {
       <PriceSummary
         items={items}
         onQuantityChange={handleQuantityChange}
-        onGeneratePDF={() => console.log("Generate PDF clicked")}
-        onSave={() => console.log("Save clicked")}
+        useType="domestic"
       />
     </div>
   );

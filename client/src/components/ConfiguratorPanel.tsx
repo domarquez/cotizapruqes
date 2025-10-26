@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,89 +8,7 @@ import { Info } from "lucide-react";
 import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
 import { Button } from "@/components/ui/button";
-
-//todo: remove mock functionality
-const MOCK_PLATFORMS = [
-  { id: "p1", height: "80cm", priceDomestic: 280000, pricePublic: 380000 },
-  { id: "p2", height: "90cm", priceDomestic: 310000, pricePublic: 420000 },
-  { id: "p3", height: "1m", priceDomestic: 340000, pricePublic: 460000 },
-  { id: "p4", height: "1.20m", priceDomestic: 380000, pricePublic: 520000 },
-  { id: "p5", height: "1.50m", priceDomestic: 450000, pricePublic: 620000 },
-];
-
-//todo: remove mock functionality
-const MOCK_MODULES = {
-  techos: [
-    { 
-      id: "t1", 
-      name: "Techo Madera", 
-      materialDomestic: "Madera tratada", 
-      materialPublic: "Madera reforzada",
-      priceDomestic: 120000,
-      pricePublic: 180000
-    },
-    { 
-      id: "t2", 
-      name: "Techo Plástico", 
-      materialDomestic: "Plástico HD", 
-      materialPublic: "Plástico HD reforzado",
-      priceDomestic: 85000,
-      pricePublic: 135000
-    },
-    { 
-      id: "t3", 
-      name: "Techo Metálico", 
-      materialDomestic: "Metal galvanizado", 
-      materialPublic: "Metal reforzado antigolpes",
-      priceDomestic: 150000,
-      pricePublic: 220000
-    },
-  ],
-  resbalines: [
-    { 
-      id: "r1", 
-      name: "Resbalín Plástico", 
-      materialDomestic: "Plástico HD", 
-      materialPublic: "Plástico industrial reforzado",
-      priceDomestic: 85000,
-      pricePublic: 145000
-    },
-    { 
-      id: "r2", 
-      name: "Resbalín Metálico", 
-      materialDomestic: "Acero inoxidable", 
-      materialPublic: "Acero reforzado antigolpes",
-      priceDomestic: 140000,
-      pricePublic: 220000
-    },
-  ],
-  accesorios: [
-    { 
-      id: "a1", 
-      name: "Escalera Madera", 
-      materialDomestic: "Madera tratada", 
-      materialPublic: "Madera reforzada",
-      priceDomestic: 65000,
-      pricePublic: 95000
-    },
-    { 
-      id: "a2", 
-      name: "Muro de Escalada", 
-      materialDomestic: "Madera + Presas", 
-      materialPublic: "Madera reforzada + Presas industriales",
-      priceDomestic: 180000,
-      pricePublic: 280000
-    },
-    { 
-      id: "a3", 
-      name: "Barras Horizontales", 
-      materialDomestic: "Metal", 
-      materialPublic: "Metal reforzado",
-      priceDomestic: 95000,
-      pricePublic: 145000
-    },
-  ],
-};
+import type { Platform, Module } from "@shared/schema";
 
 export default function ConfiguratorPanel() {
   const [productType, setProductType] = useState<"playground" | "house">("playground");
@@ -97,13 +16,32 @@ export default function ConfiguratorPanel() {
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
 
+  const { data: platforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
+    queryKey: ["/api/platforms"],
+  });
+
+  const { data: modules = [], isLoading: loadingModules } = useQuery<Module[]>({
+    queryKey: ["/api/modules"],
+  });
+
+  const { data: houses = [], isLoading: loadingHouses } = useQuery<any[]>({
+    queryKey: ["/api/houses"],
+  });
+
+  const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
+
   const toggleModule = (moduleId: string) => {
-    console.log(`Toggling module: ${moduleId}`);
     const newSelected = new Set(selectedModules);
     if (newSelected.has(moduleId)) {
       newSelected.delete(moduleId);
+      // Remove quantity when deselecting
+      const newQuantities = { ...itemQuantities };
+      delete newQuantities[moduleId];
+      setItemQuantities(newQuantities);
     } else {
       newSelected.add(moduleId);
+      // Set initial quantity to 1 when selecting
+      setItemQuantities({ ...itemQuantities, [moduleId]: 1 });
     }
     setSelectedModules(newSelected);
   };
@@ -111,42 +49,85 @@ export default function ConfiguratorPanel() {
   const getSummaryItems = () => {
     const items: Array<{ id: string; name: string; price: number; quantity: number }> = [];
     
-    if (selectedPlatform) {
-      const platform = MOCK_PLATFORMS.find(p => p.id === selectedPlatform);
+    if (productType === "playground" && selectedPlatform) {
+      const platform = platforms.find(p => p.id === selectedPlatform);
       if (platform) {
-        const price = useType === "domestic" ? platform.priceDomestic : platform.pricePublic;
+        const price = useType === "domestic" 
+          ? parseFloat(platform.priceDomestic) 
+          : parseFloat(platform.pricePublic);
+        const quantity = itemQuantities[platform.id] || 1;
         items.push({
           id: platform.id,
           name: `Plataforma ${platform.height} (${useType === "domestic" ? "Domicilio" : "Pública"})`,
           price,
-          quantity: 1,
+          quantity,
         });
       }
     }
 
-    Object.values(MOCK_MODULES).flat().forEach(module => {
-      if (selectedModules.has(module.id)) {
-        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+    if (productType === "house" && selectedPlatform) {
+      const house = houses.find(h => h.id === selectedPlatform);
+      if (house) {
+        const price = useType === "domestic" 
+          ? parseFloat(house.priceDomestic) 
+          : parseFloat(house.pricePublic);
+        const quantity = itemQuantities[house.id] || 1;
         items.push({
-          id: module.id,
-          name: module.name,
+          id: house.id,
+          name: `Casa ${house.size} (${useType === "domestic" ? "Domicilio" : "Pública"})`,
           price,
-          quantity: 1,
+          quantity,
         });
       }
-    });
+    }
+
+    if (productType === "playground") {
+      modules.forEach(module => {
+        if (selectedModules.has(module.id)) {
+          const price = useType === "domestic" 
+            ? parseFloat(module.priceDomestic) 
+            : parseFloat(module.pricePublic);
+          const quantity = itemQuantities[module.id] || 1;
+          items.push({
+            id: module.id,
+            name: module.name,
+            price,
+            quantity,
+          });
+        }
+      });
+    }
 
     return items;
   };
 
   const handleQuantityChange = (id: string, delta: number) => {
-    console.log(`Quantity change for ${id}: ${delta}`);
+    const currentQuantity = itemQuantities[id] || 1;
+    const newQuantity = Math.max(1, currentQuantity + delta);
+    setItemQuantities({ ...itemQuantities, [id]: newQuantity });
   };
 
   const resetSelection = () => {
     setSelectedPlatform(null);
     setSelectedModules(new Set());
+    setItemQuantities({});
   };
+
+  const modulesByCategory = {
+    techos: modules.filter(m => m.category === "techos"),
+    resbalines: modules.filter(m => m.category === "resbalines"),
+    accesorios: modules.filter(m => m.category === "accesorios"),
+  };
+
+  if (loadingPlatforms || loadingModules || loadingHouses) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <p className="text-center text-muted-foreground">Cargando configurador...</p>
+      </div>
+    );
+  }
+
+  const displayItems = productType === "playground" ? platforms : houses;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -175,7 +156,6 @@ export default function ConfiguratorPanel() {
               variant={useType === "domestic" ? "default" : "outline"}
               className="w-full hover-elevate active-elevate-2"
               onClick={() => {
-                console.log("Switched to domestic");
                 setUseType("domestic");
                 resetSelection();
               }}
@@ -201,7 +181,6 @@ export default function ConfiguratorPanel() {
               variant={useType === "public" ? "default" : "outline"}
               className="w-full hover-elevate active-elevate-2"
               onClick={() => {
-                console.log("Switched to public");
                 setUseType("public");
                 resetSelection();
               }}
@@ -227,7 +206,6 @@ export default function ConfiguratorPanel() {
         <Button
           variant={productType === "playground" ? "default" : "outline"}
           onClick={() => {
-            console.log("Switched to playground");
             setProductType("playground");
             resetSelection();
           }}
@@ -239,7 +217,6 @@ export default function ConfiguratorPanel() {
         <Button
           variant={productType === "house" ? "default" : "outline"}
           onClick={() => {
-            console.log("Switched to house");
             setProductType("house");
             resetSelection();
           }}
@@ -254,31 +231,36 @@ export default function ConfiguratorPanel() {
         <div className="space-y-8">
           <Card data-testid="card-platform-selection">
             <CardHeader>
-              <CardTitle>Paso 1: Selecciona la Plataforma Base</CardTitle>
+              <CardTitle>
+                Paso 1: Selecciona {productType === "playground" ? "la Plataforma Base" : "el Tamaño de la Casa"}
+              </CardTitle>
               <CardDescription>
-                Elige la altura de la plataforma para tu {productType === "playground" ? "parque" : "casa"}
+                Elige {productType === "playground" ? "la altura de la plataforma" : "el tamaño de la casa"} para tu {productType === "playground" ? "parque" : "casa"}
                 {useType === "public" && " (versión reforzada para uso público)"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {MOCK_PLATFORMS.map((platform) => {
-                  const price = useType === "domestic" ? platform.priceDomestic : platform.pricePublic;
+                {displayItems.map((item: any) => {
+                  const price = useType === "domestic" 
+                    ? parseFloat(item.priceDomestic) 
+                    : parseFloat(item.pricePublic);
+                  const label = productType === "playground" ? item.height : item.size;
                   return (
                     <button
-                      key={platform.id}
+                      key={item.id}
                       onClick={() => {
-                        console.log(`Selected platform: ${platform.id}`);
-                        setSelectedPlatform(platform.id);
+                        setSelectedPlatform(item.id);
+                        setItemQuantities({ ...itemQuantities, [item.id]: 1 });
                       }}
                       className={`p-4 rounded-lg border-2 transition-all hover-elevate active-elevate-2 ${
-                        selectedPlatform === platform.id
+                        selectedPlatform === item.id
                           ? "border-primary bg-primary/5"
                           : "border-border"
                       }`}
-                      data-testid={`button-platform-${platform.id}`}
+                      data-testid={`button-${productType}-${item.id}`}
                     >
-                      <div className="font-semibold text-lg mb-1">{platform.height}</div>
+                      <div className="font-semibold text-lg mb-1">{label}</div>
                       <div className="text-sm text-muted-foreground">
                         ${price.toLocaleString()}
                       </div>
@@ -294,7 +276,7 @@ export default function ConfiguratorPanel() {
             </CardContent>
           </Card>
 
-          {selectedPlatform && (
+          {selectedPlatform && productType === "playground" && (
             <Card data-testid="card-modules-selection">
               <CardHeader>
                 <CardTitle>Paso 2: Agrega Módulos y Accesorios</CardTitle>
@@ -312,9 +294,11 @@ export default function ConfiguratorPanel() {
                   </TabsList>
                   <TabsContent value="techos" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.techos.map((module) => {
-                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
-                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                      {modulesByCategory.techos.map((module) => {
+                        const material = useType === "domestic" ? module.material : module.materialPublic;
+                        const price = useType === "domestic" 
+                          ? parseFloat(module.priceDomestic) 
+                          : parseFloat(module.pricePublic);
                         return (
                           <ModuleCard
                             key={module.id}
@@ -332,9 +316,11 @@ export default function ConfiguratorPanel() {
                   </TabsContent>
                   <TabsContent value="resbalines" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.resbalines.map((module) => {
-                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
-                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                      {modulesByCategory.resbalines.map((module) => {
+                        const material = useType === "domestic" ? module.material : module.materialPublic;
+                        const price = useType === "domestic" 
+                          ? parseFloat(module.priceDomestic) 
+                          : parseFloat(module.pricePublic);
                         return (
                           <ModuleCard
                             key={module.id}
@@ -352,9 +338,11 @@ export default function ConfiguratorPanel() {
                   </TabsContent>
                   <TabsContent value="accesorios" className="mt-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                      {MOCK_MODULES.accesorios.map((module) => {
-                        const material = useType === "domestic" ? module.materialDomestic : module.materialPublic;
-                        const price = useType === "domestic" ? module.priceDomestic : module.pricePublic;
+                      {modulesByCategory.accesorios.map((module) => {
+                        const material = useType === "domestic" ? module.material : module.materialPublic;
+                        const price = useType === "domestic" 
+                          ? parseFloat(module.priceDomestic) 
+                          : parseFloat(module.pricePublic);
                         return (
                           <ModuleCard
                             key={module.id}
@@ -380,8 +368,8 @@ export default function ConfiguratorPanel() {
           <PriceSummary
             items={getSummaryItems()}
             onQuantityChange={handleQuantityChange}
-            onGeneratePDF={() => console.log("Generate PDF")}
-            onSave={() => console.log("Save quote")}
+            useType={useType}
+            productType={productType}
           />
         </div>
       </div>
