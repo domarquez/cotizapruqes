@@ -100,6 +100,20 @@ export default function Admin() {
     },
   });
 
+  const addModuleMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/modules", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
+      toast({ title: "Módulo agregado exitosamente" });
+      setAddModuleDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error al agregar módulo", variant: "destructive" });
+    },
+  });
+
   const handleLogout = () => {
     setIsAuthenticated(false);
   };
@@ -335,6 +349,160 @@ export default function Admin() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={addModuleDialogOpen} onOpenChange={setAddModuleDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Agregar Nuevo Módulo</DialogTitle>
+            <DialogDescription>
+              Completa los datos del nuevo módulo. Recuerda que los precios son para plataforma base 1m x 1m.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const data = {
+                name: formData.get("name") as string,
+                category: formData.get("category") as string,
+                material: formData.get("material") as string,
+                materialPublic: formData.get("materialPublic") as string,
+                priceDomestic: formData.get("priceDomestic") as string,
+                pricePublic: formData.get("pricePublic") as string,
+                productType: formData.get("productType") as string,
+                description: formData.get("description") as string || null,
+              };
+              addModuleMutation.mutate(data);
+            }}
+          >
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nombre del Módulo *</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  required
+                  placeholder="Ej: Techo PVC teja"
+                  data-testid="input-module-name"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="category">Categoría *</Label>
+                <select
+                  id="category"
+                  name="category"
+                  required
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="select-module-category"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="techos">Techos</option>
+                  <option value="resbalines">Resbalines</option>
+                  <option value="accesorios">Accesorios</option>
+                </select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="productType">Tipo de Producto *</Label>
+                <select
+                  id="productType"
+                  name="productType"
+                  required
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="select-module-product-type"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="playground">Parque Infantil</option>
+                  <option value="house">Casa de Madera</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="material">Material Doméstico *</Label>
+                  <Input
+                    id="material"
+                    name="material"
+                    required
+                    placeholder="Ej: Madera pino"
+                    data-testid="input-module-material"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="materialPublic">Material Público *</Label>
+                  <Input
+                    id="materialPublic"
+                    name="materialPublic"
+                    required
+                    placeholder="Ej: Madera reforzada"
+                    data-testid="input-module-material-public"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="priceDomestic">Precio Doméstico (Bs) *</Label>
+                  <Input
+                    id="priceDomestic"
+                    name="priceDomestic"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    data-testid="input-module-price-domestic"
+                  />
+                  <p className="text-xs text-muted-foreground">Base para plataforma 1m x 1m</p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePublic">Precio Público (Bs) *</Label>
+                  <Input
+                    id="pricePublic"
+                    name="pricePublic"
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    data-testid="input-module-price-public"
+                  />
+                  <p className="text-xs text-muted-foreground">Base para plataforma 1m x 1m</p>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description">Descripción (opcional)</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  placeholder="Descripción adicional del módulo"
+                  data-testid="input-module-description"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAddModuleDialogOpen(false)}
+                data-testid="button-cancel-module"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={addModuleMutation.isPending}
+                data-testid="button-submit-module"
+              >
+                {addModuleMutation.isPending ? "Agregando..." : "Agregar Módulo"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
