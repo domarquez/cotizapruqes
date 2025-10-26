@@ -140,10 +140,26 @@ export default function ConfiguratorPanel() {
     setItemQuantities({});
   };
 
+  // Filter modules by category and availability (price > 0)
   const modulesByCategory = {
-    techos: modules.filter(m => m.category === "techos"),
-    resbalines: modules.filter(m => m.category === "resbalines"),
-    accesorios: modules.filter(m => m.category === "accesorios"),
+    techos: modules.filter(m => {
+      const price = useType === "domestic" 
+        ? parseFloat(m.priceDomestic) 
+        : parseFloat(m.pricePublic);
+      return m.category === "techos" && m.productType === "playground" && price > 0;
+    }),
+    resbalines: modules.filter(m => {
+      const price = useType === "domestic" 
+        ? parseFloat(m.priceDomestic) 
+        : parseFloat(m.pricePublic);
+      return m.category === "resbalines" && m.productType === "playground" && price > 0;
+    }),
+    accesorios: modules.filter(m => {
+      const price = useType === "domestic" 
+        ? parseFloat(m.priceDomestic) 
+        : parseFloat(m.pricePublic);
+      return m.category === "accesorios" && m.productType === "playground" && price > 0;
+    }),
   };
 
   if (loadingPlatforms || loadingModules || loadingHouses) {
