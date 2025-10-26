@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
 import { Button } from "@/components/ui/button";
 import type { Platform, Module } from "@shared/schema";
+import { getAdjustedModulePrice, getPlatformMultiplier } from "@shared/pricing";
 
 export default function ConfiguratorPanel() {
   const [productType, setProductType] = useState<"playground" | "house">("playground");
@@ -19,6 +20,26 @@ export default function ConfiguratorPanel() {
   const { data: platforms = [], isLoading: loadingPlatforms } = useQuery<Platform[]>({
     queryKey: ["/api/platforms"],
   });
+
+  // Reset modules when platform changes to avoid stale pricing
+  useEffect(() => {
+    if (selectedPlatform) {
+      setSelectedModules(new Set());
+      setItemQuantities(prev => {
+        const newQuantities = { ...prev };
+        // Keep only the platform quantity
+        Object.keys(newQuantities).forEach(id => {
+          if (id !== selectedPlatform) {
+            const isModule = modules.some(m => m.id === id);
+            if (isModule) {
+              delete newQuantities[id];
+            }
+          }
+        });
+        return newQuantities;
+      });
+    }
+  }, [selectedPlatform]);
 
   const { data: modules = [], isLoading: loadingModules } = useQuery<Module[]>({
     queryKey: ["/api/modules"],
@@ -48,6 +69,8 @@ export default function ConfiguratorPanel() {
 
   const getSummaryItems = () => {
     const items: Array<{ id: string; name: string; price: number; quantity: number }> = [];
+    
+    const currentPlatform = platforms.find(p => p.id === selectedPlatform);
     
     if (productType === "playground" && selectedPlatform) {
       const platform = platforms.find(p => p.id === selectedPlatform);
@@ -84,9 +107,8 @@ export default function ConfiguratorPanel() {
     if (productType === "playground") {
       modules.forEach(module => {
         if (selectedModules.has(module.id)) {
-          const price = useType === "domestic" 
-            ? parseFloat(module.priceDomestic) 
-            : parseFloat(module.pricePublic);
+          // Calculate adjusted price based on platform size
+          const price = getAdjustedModulePrice(module, currentPlatform, useType);
           const quantity = itemQuantities[module.id] || 1;
           items.push({
             id: module.id,
@@ -296,9 +318,8 @@ export default function ConfiguratorPanel() {
                     <div className="grid md:grid-cols-2 gap-4">
                       {modulesByCategory.techos.map((module) => {
                         const material = useType === "domestic" ? module.material : module.materialPublic;
-                        const price = useType === "domestic" 
-                          ? parseFloat(module.priceDomestic) 
-                          : parseFloat(module.pricePublic);
+                        const currentPlatform = platforms.find(p => p.id === selectedPlatform);
+                        const price = getAdjustedModulePrice(module, currentPlatform, useType);
                         return (
                           <ModuleCard
                             key={module.id}
@@ -318,9 +339,8 @@ export default function ConfiguratorPanel() {
                     <div className="grid md:grid-cols-2 gap-4">
                       {modulesByCategory.resbalines.map((module) => {
                         const material = useType === "domestic" ? module.material : module.materialPublic;
-                        const price = useType === "domestic" 
-                          ? parseFloat(module.priceDomestic) 
-                          : parseFloat(module.pricePublic);
+                        const currentPlatform = platforms.find(p => p.id === selectedPlatform);
+                        const price = getAdjustedModulePrice(module, currentPlatform, useType);
                         return (
                           <ModuleCard
                             key={module.id}
@@ -340,9 +360,8 @@ export default function ConfiguratorPanel() {
                     <div className="grid md:grid-cols-2 gap-4">
                       {modulesByCategory.accesorios.map((module) => {
                         const material = useType === "domestic" ? module.material : module.materialPublic;
-                        const price = useType === "domestic" 
-                          ? parseFloat(module.priceDomestic) 
-                          : parseFloat(module.pricePublic);
+                        const currentPlatform = platforms.find(p => p.id === selectedPlatform);
+                        const price = getAdjustedModulePrice(module, currentPlatform, useType);
                         return (
                           <ModuleCard
                             key={module.id}
