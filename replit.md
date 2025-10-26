@@ -93,6 +93,7 @@ Three main tables defined in `shared/schema.ts`:
    - Separate pricing for domestic vs. public use
    - Playground variants: 80cm to 150cm height
    - House variants: 1.5x1.5m to 3x3m (stored as 150cm to 300cm)
+   - imageUrl field: Optional URL for product image (stored in Replit Object Storage)
 
 2. **modules:** Add-on components (roofs, slides, walls, etc.)
    - Categorized (techos, resbalines, accesorios)
@@ -100,6 +101,7 @@ Three main tables defined in `shared/schema.ts`:
    - Product type field: "playground" or "house" (informational)
    - Modules work with both platform categories
    - Price automatically adjusts based on selected platform size
+   - imageUrl field: Optional URL for product image (stored in Replit Object Storage)
 
 3. **quotes:** Customer quotation records
    - Client contact information
@@ -161,7 +163,9 @@ System requires implementation of proper authentication:
 - `tsconfig.json`: TypeScript compilation with path mappings
 
 **Asset Management:**
-Generated images stored in `attached_assets/generated_images/` referenced via Vite aliases
+- Generated images stored in `attached_assets/generated_images/` referenced via Vite aliases
+- Product images uploaded via Replit Object Storage integration
+- Simplified ObjectUploader component in `client/src/components/ObjectUploader.tsx` (native file input, no Uppy Dashboard UI to avoid CSS dependency issues)
 
 ### Pricing Logic
 
@@ -201,3 +205,33 @@ HOUSE_MULTIPLIERS = {
    - For house modules: base price for 2m x 2m houses
 2. Frontend automatically calculates adjusted prices for all other sizes
 3. No need to manage multiple price points per module per platform size
+
+### Image Management System
+
+**Object Storage Integration:**
+- Replit Object Storage (Google Cloud Storage backend) configured for product images
+- Environment variables: `DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PUBLIC_OBJECT_SEARCH_PATHS`, `PRIVATE_OBJECT_DIR`
+- Storage files: `server/objectStorage.ts`, `server/objectAcl.ts`
+
+**Upload Implementation:**
+- Simplified custom ObjectUploader component (no Uppy Dashboard to avoid CSS import issues)
+- Native file input with validation (images only, max 5MB)
+- Upload flow: Request URL from backend → PUT file to object storage → Update database with URL
+- API endpoints:
+  - `POST /api/objects/upload` - Generate signed upload URL
+  - `PATCH /api/platforms/:id/image` - Update platform image URL
+  - `PATCH /api/modules/:id/image` - Update module image URL
+
+**Display Implementation:**
+- Platform images: Fixed height h-32 (128px) in configurator platform selection
+- Module images: Fixed height h-40 (160px) in ModuleCard components
+- All images use `object-cover` to maintain aspect ratio within fixed containers
+- Images only display when `imageUrl` field is populated
+- Admin panel shows 12x12 thumbnails with upload buttons in table rows
+
+**Recent Changes (October 26, 2025):**
+- Added `imageUrl` field to platforms and modules tables
+- Implemented image upload functionality in Admin panel
+- Updated ConfiguratorPanel to display platform images with uniform sizing
+- Updated ModuleCard component to display module images with uniform sizing
+- End-to-end testing confirmed: upload UI, image display, and layout consistency
