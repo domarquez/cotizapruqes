@@ -84,23 +84,24 @@ Drizzle ORM chosen for:
 - Native TypeScript support
 
 **Schema Design:**
-Four main tables defined in `shared/schema.ts`:
+Three main tables defined in `shared/schema.ts`:
 
-1. **platforms:** Base playground structures
-   - height variants (80cm to 150cm)
+1. **platforms:** Unified table for both playground and house structures
+   - category field: "playground" or "house"
+   - height field: Display text (e.g., "80cm", "2x2m")
+   - heightCm field: Numeric value for pricing calculations
    - Separate pricing for domestic vs. public use
-   - Category field for future expansion
+   - Playground variants: 80cm to 150cm height
+   - House variants: 1.5x1.5m to 3x3m (stored as 150cm to 300cm)
 
 2. **modules:** Add-on components (roofs, slides, walls, etc.)
-   - Categorized (techos, resbales, paredes, etc.)
+   - Categorized (techos, resbalines, accesorios)
    - Material specifications (different for domestic/public)
-   - Product type association (playground/house)
+   - Product type field: "playground" or "house" (informational)
+   - Modules work with both platform categories
+   - Price automatically adjusts based on selected platform size
 
-3. **houses:** Wooden house catalog
-   - Size specifications (width × length)
-   - Dual pricing structure
-
-4. **quotes:** Customer quotation records
+3. **quotes:** Customer quotation records
    - Client contact information
    - Configuration stored as JSON string
    - Product type and use type metadata
@@ -165,25 +166,38 @@ Generated images stored in `attached_assets/generated_images/` referenced via Vi
 ### Pricing Logic
 
 **Dynamic Module Pricing (shared/pricing.ts):**
-The application implements platform size-based pricing multipliers for modules:
+The application implements platform size-based pricing multipliers with **dual reference systems**:
 
+**For PLAYGROUNDS (base: 1m x 1m = 100cm):**
 ```typescript
-PLATFORM_MULTIPLIERS = {
+PLAYGROUND_MULTIPLIERS = {
   80: 0.8,   // Small platforms (80cm) - 20% discount
   100: 1.0,  // Base platforms (1m) - base price
-  120: 1.2,  // Large platforms (120cm+) - 20% premium
+  120: 1.2,  // Large platforms (120cm) - 20% premium
   150: 1.2   // Extra large platforms (1.5m) - 20% premium
 }
 ```
 
+**For HOUSES (base: 2m x 2m = 200cm):**
+```typescript
+HOUSE_MULTIPLIERS = {
+  150: 0.75,  // 1.5x1.5m - 25% discount
+  200: 1.0,   // 2x2m - base price
+  250: 1.25,  // 2.5x2.5m - 25% premium
+  300: 1.5    // 3x3m - 50% premium
+}
+```
+
 **Implementation Details:**
-- `getPlatformMultiplier(platform)`: Returns multiplier for a given platform
+- `getPlatformMultiplier(platform)`: Auto-selects correct multiplier table based on platform.category
 - `getAdjustedModulePrice(module, platform, useType)`: Calculates final module price
 - Applied in ConfiguratorPanel when rendering ModuleCards and calculating totals
 - Modules reset when platform changes to prevent stale pricing
 - useRef tracks previous platform to avoid resetting on data refetches
 
 **Admin Workflow:**
-1. Admin sets base module prices (for 1m x 1m platforms) in admin panel
-2. Frontend automatically calculates adjusted prices for other platform sizes
+1. Admin sets base module prices in admin panel:
+   - For playground modules: base price for 1m x 1m platforms
+   - For house modules: base price for 2m x 2m houses
+2. Frontend automatically calculates adjusted prices for all other sizes
 3. No need to manage multiple price points per module per platform size

@@ -436,6 +436,9 @@ export default function Admin() {
                   <option value="playground">Parque Infantil</option>
                   <option value="house">Casa de Madera</option>
                 </select>
+                <p className="text-xs text-muted-foreground">
+                  Precio base: Parques (1m x 1m) | Casitas (2m x 2m)
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -474,7 +477,7 @@ export default function Admin() {
                     placeholder="0.00"
                     data-testid="input-module-price-domestic"
                   />
-                  <p className="text-xs text-muted-foreground">Base para plataforma 1m x 1m</p>
+                  <p className="text-xs text-muted-foreground">Parques: 1m x 1m | Casitas: 2m x 2m</p>
                 </div>
 
                 <div className="grid gap-2">
@@ -488,7 +491,7 @@ export default function Admin() {
                     placeholder="0.00"
                     data-testid="input-module-price-public"
                   />
-                  <p className="text-xs text-muted-foreground">Base para plataforma 1m x 1m</p>
+                  <p className="text-xs text-muted-foreground">Parques: 1m x 1m | Casitas: 2m x 2m</p>
                 </div>
               </div>
 
