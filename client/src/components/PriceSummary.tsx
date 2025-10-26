@@ -91,8 +91,8 @@ export default function PriceSummary({
       const subtotal = item.price * item.quantity;
       doc.text(item.quantity.toString(), 25, currentY);
       doc.text(item.name, 50, currentY);
-      doc.text(`$${item.price.toLocaleString()}`, 130, currentY);
-      doc.text(`$${subtotal.toLocaleString()}`, 170, currentY);
+      doc.text(`Bs ${item.price.toLocaleString()}`, 130, currentY);
+      doc.text(`Bs ${subtotal.toLocaleString()}`, 170, currentY);
       currentY += 7;
     });
     
@@ -103,7 +103,7 @@ export default function PriceSummary({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Total:", 130, currentY);
-    doc.text(`$${total.toLocaleString()}`, 170, currentY);
+    doc.text(`Bs ${total.toLocaleString()}`, 170, currentY);
     
     // Footer
     doc.setFontSize(9);
@@ -156,7 +156,7 @@ export default function PriceSummary({
                       {item.name}
                     </div>
                     <div className="text-sm font-semibold" data-testid={`text-item-price-${item.id}`}>
-                      ${(item.price * item.quantity).toLocaleString()}
+                      Bs {(item.price * item.quantity).toLocaleString()}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function PriceSummary({
               <div className="flex items-center justify-between pt-2">
                 <div className="text-lg font-semibold">Total</div>
                 <div className="text-2xl font-bold text-primary" data-testid="text-total-price">
-                  ${total.toLocaleString()}
+                  Bs {total.toLocaleString()}
                 </div>
               </div>
             </>

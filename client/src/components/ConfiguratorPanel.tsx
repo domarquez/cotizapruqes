@@ -262,7 +262,7 @@ export default function ConfiguratorPanel() {
                     >
                       <div className="font-semibold text-lg mb-1">{label}</div>
                       <div className="text-sm text-muted-foreground">
-                        ${price.toLocaleString()}
+                        Bs {price.toLocaleString()}
                       </div>
                       {useType === "public" && (
                         <Badge variant="secondary" className="mt-2 text-xs">

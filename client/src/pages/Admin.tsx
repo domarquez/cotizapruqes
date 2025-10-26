@@ -173,8 +173,8 @@ export default function Admin() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Altura</TableHead>
-                      <TableHead>Precio Doméstico (CLP)</TableHead>
-                      <TableHead>Precio Público (CLP)</TableHead>
+                      <TableHead>Precio Doméstico (Bs)</TableHead>
+                      <TableHead>Precio Público (Bs)</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>

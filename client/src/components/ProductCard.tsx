@@ -47,7 +47,7 @@ export default function ProductCard({
         <div>
           <div className="text-sm text-muted-foreground">Desde</div>
           <div className="text-2xl font-bold text-primary" data-testid={`text-price-${id}`}>
-            ${startingPrice.toLocaleString()}
+            Bs {startingPrice.toLocaleString()}
           </div>
         </div>
         <Link href={`/configurador?type=${category.toLowerCase().replace(" ", "-")}`}>

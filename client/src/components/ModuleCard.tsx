@@ -57,7 +57,7 @@ export default function ModuleCard({
           </div>
         </div>
         <div className="text-lg font-bold text-primary" data-testid={`text-module-price-${id}`}>
-          +${price.toLocaleString()}
+          +Bs {price.toLocaleString()}
         </div>
       </CardContent>
     </Card>
