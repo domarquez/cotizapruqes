@@ -1,5 +1,5 @@
-import { type Platform, type Module, type House, type Quote, type InsertPlatform, type InsertModule, type InsertHouse, type InsertQuote } from "@shared/schema";
-import { platforms, modules, houses, quotes } from "@shared/schema";
+import { type Platform, type Module, type Quote, type InsertPlatform, type InsertModule, type InsertQuote } from "@shared/schema";
+import { platforms, modules, quotes } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -17,13 +17,6 @@ export interface IStorage {
   createModule(module: InsertModule): Promise<Module>;
   updateModule(id: string, module: Partial<InsertModule>): Promise<Module>;
   deleteModule(id: string): Promise<void>;
-  
-  // Houses
-  getHouses(): Promise<House[]>;
-  getHouse(id: string): Promise<House | undefined>;
-  createHouse(house: InsertHouse): Promise<House>;
-  updateHouse(id: string, house: Partial<InsertHouse>): Promise<House>;
-  deleteHouse(id: string): Promise<void>;
   
   // Quotes
   getQuotes(): Promise<Quote[]>;
@@ -92,37 +85,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteModule(id: string): Promise<void> {
     await db.delete(modules).where(eq(modules.id, id));
-  }
-
-  // Houses
-  async getHouses(): Promise<House[]> {
-    return await db.select().from(houses);
-  }
-
-  async getHouse(id: string): Promise<House | undefined> {
-    const [house] = await db.select().from(houses).where(eq(houses.id, id));
-    return house || undefined;
-  }
-
-  async createHouse(insertHouse: InsertHouse): Promise<House> {
-    const [house] = await db
-      .insert(houses)
-      .values(insertHouse)
-      .returning();
-    return house;
-  }
-
-  async updateHouse(id: string, updateData: Partial<InsertHouse>): Promise<House> {
-    const [house] = await db
-      .update(houses)
-      .set(updateData)
-      .where(eq(houses.id, id))
-      .returning();
-    return house;
-  }
-
-  async deleteHouse(id: string): Promise<void> {
-    await db.delete(houses).where(eq(houses.id, id));
   }
 
   // Quotes

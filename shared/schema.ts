@@ -24,15 +24,6 @@ export const modules = pgTable("modules", {
   description: text("description"),
 });
 
-export const houses = pgTable("houses", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  size: text("size").notNull(),
-  width: decimal("width", { precision: 5, scale: 2 }).notNull(),
-  length: decimal("length", { precision: 5, scale: 2 }).notNull(),
-  priceDomestic: decimal("price_domestic", { precision: 10, scale: 2 }).notNull(),
-  pricePublic: decimal("price_public", { precision: 10, scale: 2 }).notNull(),
-});
-
 export const quotes = pgTable("quotes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   clientName: text("client_name").notNull(),
@@ -47,7 +38,6 @@ export const quotes = pgTable("quotes", {
 
 export const insertPlatformSchema = createInsertSchema(platforms).omit({ id: true });
 export const insertModuleSchema = createInsertSchema(modules).omit({ id: true });
-export const insertHouseSchema = createInsertSchema(houses).omit({ id: true });
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
 
 export type Platform = typeof platforms.$inferSelect;
@@ -55,9 +45,6 @@ export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
 
 export type Module = typeof modules.$inferSelect;
 export type InsertModule = z.infer<typeof insertModuleSchema>;
-
-export type House = typeof houses.$inferSelect;
-export type InsertHouse = z.infer<typeof insertHouseSchema>;
 
 export type Quote = typeof quotes.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;

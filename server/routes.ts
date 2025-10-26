@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPlatformSchema, insertModuleSchema, insertHouseSchema, insertQuoteSchema } from "@shared/schema";
+import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // PLATFORMS
@@ -111,61 +111,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting module:", error);
       res.status(500).json({ error: "Failed to delete module" });
-    }
-  });
-
-  // HOUSES
-  app.get("/api/houses", async (req, res) => {
-    try {
-      const houses = await storage.getHouses();
-      res.json(houses);
-    } catch (error) {
-      console.error("Error fetching houses:", error);
-      res.status(500).json({ error: "Failed to fetch houses" });
-    }
-  });
-
-  app.get("/api/houses/:id", async (req, res) => {
-    try {
-      const house = await storage.getHouse(req.params.id);
-      if (!house) {
-        return res.status(404).json({ error: "House not found" });
-      }
-      res.json(house);
-    } catch (error) {
-      console.error("Error fetching house:", error);
-      res.status(500).json({ error: "Failed to fetch house" });
-    }
-  });
-
-  app.post("/api/houses", async (req, res) => {
-    try {
-      const validatedData = insertHouseSchema.parse(req.body);
-      const house = await storage.createHouse(validatedData);
-      res.status(201).json(house);
-    } catch (error) {
-      console.error("Error creating house:", error);
-      res.status(400).json({ error: "Invalid house data" });
-    }
-  });
-
-  app.patch("/api/houses/:id", async (req, res) => {
-    try {
-      const house = await storage.updateHouse(req.params.id, req.body);
-      res.json(house);
-    } catch (error) {
-      console.error("Error updating house:", error);
-      res.status(400).json({ error: "Failed to update house" });
-    }
-  });
-
-  app.delete("/api/houses/:id", async (req, res) => {
-    try {
-      await storage.deleteHouse(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting house:", error);
-      res.status(500).json({ error: "Failed to delete house" });
     }
   });
 
