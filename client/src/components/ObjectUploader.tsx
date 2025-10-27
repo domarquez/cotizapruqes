@@ -1,5 +1,5 @@
-// Referenced from blueprint: javascript_object_storage
-// Simplified version without Uppy Dashboard UI to avoid CSS import issues
+// Image uploader component for local file storage
+// Uploads images to server's public/uploads directory
 import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -7,23 +7,18 @@ import { useToast } from "@/hooks/use-toast";
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
-  onGetUploadParameters: () => Promise<{
-    method: "PUT";
-    url: string;
-  }>;
   onComplete?: (result: { successful: Array<{ uploadURL: string }> }) => void;
   buttonClassName?: string;
   children: ReactNode;
 }
 
 /**
- * A simplified file upload component for object storage
- * Uses native file input instead of Uppy Dashboard to avoid CSS dependency issues
+ * A simplified file upload component for local storage
+ * Uploads images to the server's public/uploads directory
  */
 export function ObjectUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760, // 10MB default
-  onGetUploadParameters,
   onComplete,
   buttonClassName,
   children,
@@ -56,26 +51,26 @@ export function ObjectUploader({
     }
 
     try {
-      // Get upload URL from backend
-      const uploadParams = await onGetUploadParameters();
+      // Create form data with the image
+      const formData = new FormData();
+      formData.append('image', file);
       
-      // Upload file to object storage
-      const response = await fetch(uploadParams.url, {
-        method: uploadParams.method,
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
+      // Upload file to local server
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
       });
 
       if (!response.ok) {
         throw new Error('Upload failed');
       }
 
+      const data = await response.json();
+
       // Call completion handler
       onComplete?.({
         successful: [{
-          uploadURL: uploadParams.url.split('?')[0], // Remove query params
+          uploadURL: data.imageUrl,
         }],
       });
 

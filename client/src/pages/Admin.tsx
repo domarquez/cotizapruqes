@@ -542,17 +542,7 @@ export default function Admin() {
                             <ObjectUploader
                               maxNumberOfFiles={1}
                               maxFileSize={5242880}
-                              onGetUploadParameters={async () => {
-                                const response = await fetch("/api/objects/upload", {
-                                  method: "POST",
-                                });
-                                const data = await response.json();
-                                return {
-                                  method: "PUT" as const,
-                                  url: data.uploadURL,
-                                };
-                              }}
-                              onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                              onComplete={(result) => {
                                 if (result.successful && result.successful.length > 0) {
                                   const uploadedUrl = result.successful[0].uploadURL;
                                   updatePlatformImageMutation.mutate({
@@ -671,17 +661,7 @@ export default function Admin() {
                             <ObjectUploader
                               maxNumberOfFiles={1}
                               maxFileSize={5242880}
-                              onGetUploadParameters={async () => {
-                                const response = await fetch("/api/objects/upload", {
-                                  method: "POST",
-                                });
-                                const data = await response.json();
-                                return {
-                                  method: "PUT" as const,
-                                  url: data.uploadURL,
-                                };
-                              }}
-                              onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                              onComplete={(result) => {
                                 if (result.successful && result.successful.length > 0) {
                                   const uploadedUrl = result.successful[0].uploadURL;
                                   updateModuleImageMutation.mutate({
@@ -786,28 +766,12 @@ export default function Admin() {
                         <ObjectUploader
                           maxNumberOfFiles={1}
                           maxFileSize={5242880}
-                          onGetUploadParameters={async () => {
-                            const response = await fetch("/api/objects/upload-public", {
-                              method: "POST",
-                            });
-                            const data = await response.json();
-                            return {
-                              method: "PUT" as const,
-                              url: data.uploadURL,
-                            };
-                          }}
-                          onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                          onComplete={(result) => {
                             if (result.successful && result.successful.length > 0) {
                               const uploadedUrl = result.successful[0].uploadURL;
-                              // Extract filename from Google Storage URL
-                              const url = new URL(uploadedUrl);
-                              const pathParts = url.pathname.split('/');
-                              const filename = pathParts[pathParts.length - 1];
-                              // Convert to local URL
-                              const localUrl = `/public/${filename}`;
                               updateSiteContentMutation.mutate({
                                 key: "hero_image_url",
-                                value: localUrl,
+                                value: uploadedUrl,
                                 type: "text",
                                 section: "hero"
                               });
@@ -949,28 +913,14 @@ export default function Admin() {
                 <ObjectUploader
                   maxNumberOfFiles={1}
                   maxFileSize={5242880}
-                  onGetUploadParameters={async () => {
-                    const response = await fetch("/api/objects/upload-public", {
-                      method: "POST",
-                    });
-                    const data = await response.json();
-                    return {
-                      method: "PUT" as const,
-                      url: data.uploadURL,
-                    };
-                  }}
-                  onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                  onComplete={(result) => {
                     if (result.successful && result.successful.length > 0) {
                       const uploadedUrl = result.successful[0].uploadURL;
-                      const url = new URL(uploadedUrl);
-                      const pathParts = url.pathname.split('/');
-                      const filename = pathParts[pathParts.length - 1];
-                      const localUrl = `/public/${filename}`;
                       const nextOrder = heroCarouselImages.length > 0 
                         ? Math.max(...heroCarouselImages.map(img => img.order)) + 1 
                         : 0;
                       addCarouselImageMutation.mutate({
-                        imageUrl: localUrl,
+                        imageUrl: uploadedUrl,
                         order: nextOrder,
                         enabled: true
                       });
@@ -1056,30 +1006,14 @@ export default function Admin() {
                 <ObjectUploader
                   maxNumberOfFiles={1}
                   maxFileSize={5242880}
-                  onGetUploadParameters={async () => {
-                    const response = await fetch("/api/objects/upload-public", {
-                      method: "POST",
-                    });
-                    const data = await response.json();
-                    return {
-                      method: "PUT" as const,
-                      url: data.uploadURL,
-                    };
-                  }}
-                  onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                  onComplete={(result) => {
                     if (result.successful && result.successful.length > 0) {
                       const uploadedUrl = result.successful[0].uploadURL;
-                      // Extract filename from Google Storage URL
-                      const url = new URL(uploadedUrl);
-                      const pathParts = url.pathname.split('/');
-                      const filename = pathParts[pathParts.length - 1];
-                      // Convert to local URL
-                      const localUrl = `/public/${filename}`;
                       const nextOrder = galleryImages.length > 0 
                         ? Math.max(...galleryImages.map(img => img.order)) + 1 
                         : 0;
                       addGalleryImageMutation.mutate({
-                        imageUrl: localUrl,
+                        imageUrl: uploadedUrl,
                         title: "Nueva imagen",
                         order: nextOrder
                       });
