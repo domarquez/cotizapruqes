@@ -259,8 +259,9 @@ HOUSE_MULTIPLIERS = {
   - Includes ordering system for manual arrangement
   - Images stored in Replit Object Storage
 - Added "Contenido del Sitio" tab in Admin panel
-  - Inline editing of all website text organized by sections
-  - Direct onChange mutations for instant updates
+  - EditableContentField component with explicit save/cancel buttons
+  - Save button (green ✓) and cancel button (red X) appear only when changes exist
+  - Prevents auto-save interruptions during typing
   - Covers Hero, Features, Products, CTA, and Contact sections
   - **Hero image upload**: Admin can upload custom hero background image via ObjectUploader
 - Added "Galería" tab in Admin panel
@@ -275,7 +276,7 @@ HOUSE_MULTIPLIERS = {
   - Empty state message when no images exist
   - Ordered display based on `order` field
 - Created seed script (`server/seed.ts`) to populate initial site content
-- End-to-end testing confirmed: content editing, image management, display updates, and hero image upload
+- End-to-end testing confirmed: content editing with save/cancel buttons, image management, display updates, and hero image upload
 
 **October 26, 2025 - Image Upload System:**
 - Added `imageUrl` field to platforms and modules tables
