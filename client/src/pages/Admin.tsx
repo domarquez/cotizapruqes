@@ -615,7 +615,7 @@ export default function Admin() {
                           maxNumberOfFiles={1}
                           maxFileSize={5242880}
                           onGetUploadParameters={async () => {
-                            const response = await fetch("/api/objects/upload", {
+                            const response = await fetch("/api/objects/upload-public", {
                               method: "POST",
                             });
                             const data = await response.json();
@@ -772,7 +772,7 @@ export default function Admin() {
                   maxNumberOfFiles={1}
                   maxFileSize={5242880}
                   onGetUploadParameters={async () => {
-                    const response = await fetch("/api/objects/upload", {
+                    const response = await fetch("/api/objects/upload-public", {
                       method: "POST",
                     });
                     const data = await response.json();

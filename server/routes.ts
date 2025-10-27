@@ -267,6 +267,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ uploadURL });
   });
 
+  // Endpoint for getting public upload URL (for hero images, etc.)
+  app.post("/api/objects/upload-public", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getPublicObjectUploadURL();
+    res.json({ uploadURL });
+  });
+
   // Endpoint for updating platform image after upload
   app.put("/api/platforms/:id/image", async (req, res) => {
     if (!req.body.imageUrl) {
