@@ -181,6 +181,19 @@ export class ObjectStorageService {
     });
   }
 
+  // Sets a public object as publicly readable after upload
+  async setPublicObjectPermissions(uploadURL: string): Promise<void> {
+    const { bucketName, objectName } = parseObjectPath(uploadURL);
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    
+    // Set public ACL policy
+    await setObjectAclPolicy(file, {
+      owner: "system",
+      visibility: "public"
+    });
+  }
+
   // Gets the object entity file from the object path.
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {

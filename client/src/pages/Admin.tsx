@@ -627,9 +627,15 @@ export default function Admin() {
                           onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
                             if (result.successful && result.successful.length > 0) {
                               const uploadedUrl = result.successful[0].uploadURL;
+                              // Extract filename from Google Storage URL
+                              const url = new URL(uploadedUrl);
+                              const pathParts = url.pathname.split('/');
+                              const filename = pathParts[pathParts.length - 1];
+                              // Convert to local URL
+                              const localUrl = `/public/${filename}`;
                               updateSiteContentMutation.mutate({
                                 key: "hero_image_url",
-                                value: uploadedUrl,
+                                value: localUrl,
                                 type: "text",
                                 section: "hero"
                               });
@@ -784,11 +790,17 @@ export default function Admin() {
                   onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
                     if (result.successful && result.successful.length > 0) {
                       const uploadedUrl = result.successful[0].uploadURL;
+                      // Extract filename from Google Storage URL
+                      const url = new URL(uploadedUrl);
+                      const pathParts = url.pathname.split('/');
+                      const filename = pathParts[pathParts.length - 1];
+                      // Convert to local URL
+                      const localUrl = `/public/${filename}`;
                       const nextOrder = galleryImages.length > 0 
                         ? Math.max(...galleryImages.map(img => img.order)) + 1 
                         : 0;
                       addGalleryImageMutation.mutate({
-                        imageUrl: uploadedUrl,
+                        imageUrl: localUrl,
                         title: "Nueva imagen",
                         order: nextOrder
                       });

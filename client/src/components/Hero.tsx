@@ -14,7 +14,15 @@ export default function Hero() {
     return content?.value || defaultValue;
   };
 
-  const heroImageUrl = getContent("hero_image_url", heroImage);
+  let heroImageUrl = getContent("hero_image_url", heroImage);
+  
+  // Convert old Google Storage URLs to local format
+  if (heroImageUrl.includes('storage.googleapis.com')) {
+    const url = new URL(heroImageUrl);
+    const pathParts = url.pathname.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    heroImageUrl = `/public/${filename}`;
+  }
 
   return (
     <section className="relative w-full min-h-[600px] flex items-center justify-center overflow-hidden">

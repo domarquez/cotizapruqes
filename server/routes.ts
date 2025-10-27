@@ -274,6 +274,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ uploadURL });
   });
 
+  // Endpoint for serving public images
+  app.get("/public/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const publicFile = await objectStorageService.searchPublicObject(req.params.objectPath);
+      if (!publicFile) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      objectStorageService.downloadObject(publicFile, res);
+    } catch (error) {
+      console.error("Error serving public image:", error);
+      return res.sendStatus(500);
+    }
+  });
+
   // Endpoint for updating platform image after upload
   app.put("/api/platforms/:id/image", async (req, res) => {
     if (!req.body.imageUrl) {
