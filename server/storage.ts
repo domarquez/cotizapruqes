@@ -1,5 +1,5 @@
-import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage } from "@shared/schema";
-import { platforms, modules, quotes, siteContent, galleryImages } from "@shared/schema";
+import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type HeroCarouselImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage, type InsertHeroCarouselImage } from "@shared/schema";
+import { platforms, modules, quotes, siteContent, galleryImages, heroCarouselImages } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
 
@@ -34,6 +34,13 @@ export interface IStorage {
   createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
   updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage>;
   deleteGalleryImage(id: string): Promise<void>;
+  
+  // Hero Carousel Images
+  getHeroCarouselImages(): Promise<HeroCarouselImage[]>;
+  getHeroCarouselImage(id: string): Promise<HeroCarouselImage | undefined>;
+  createHeroCarouselImage(image: InsertHeroCarouselImage): Promise<HeroCarouselImage>;
+  updateHeroCarouselImage(id: string, image: Partial<InsertHeroCarouselImage>): Promise<HeroCarouselImage>;
+  deleteHeroCarouselImage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -180,6 +187,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGalleryImage(id: string): Promise<void> {
     await db.delete(galleryImages).where(eq(galleryImages.id, id));
+  }
+
+  // Hero Carousel Images
+  async getHeroCarouselImages(): Promise<HeroCarouselImage[]> {
+    return await db.select().from(heroCarouselImages).orderBy(asc(heroCarouselImages.order));
+  }
+
+  async getHeroCarouselImage(id: string): Promise<HeroCarouselImage | undefined> {
+    const [image] = await db.select().from(heroCarouselImages).where(eq(heroCarouselImages.id, id));
+    return image || undefined;
+  }
+
+  async createHeroCarouselImage(insertImage: InsertHeroCarouselImage): Promise<HeroCarouselImage> {
+    const [image] = await db
+      .insert(heroCarouselImages)
+      .values(insertImage)
+      .returning();
+    return image;
+  }
+
+  async updateHeroCarouselImage(id: string, updateData: Partial<InsertHeroCarouselImage>): Promise<HeroCarouselImage> {
+    const [image] = await db
+      .update(heroCarouselImages)
+      .set(updateData)
+      .where(eq(heroCarouselImages.id, id))
+      .returning();
+    return image;
+  }
+
+  async deleteHeroCarouselImage(id: string): Promise<void> {
+    await db.delete(heroCarouselImages).where(eq(heroCarouselImages.id, id));
   }
 }
 

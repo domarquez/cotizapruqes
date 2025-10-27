@@ -28,7 +28,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import AdminLogin from "@/components/AdminLogin";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Platform, Module, SiteContent, GalleryImage } from "@shared/schema";
+import type { Platform, Module, SiteContent, GalleryImage, HeroCarouselImage } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
 function EditableContentField({
@@ -120,6 +120,11 @@ export default function Admin() {
 
   const { data: galleryImages = [], isLoading: loadingGallery } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery-images"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: heroCarouselImages = [], isLoading: loadingCarousel } = useQuery<HeroCarouselImage[]>({
+    queryKey: ["/api/hero-carousel-images"],
     enabled: isAuthenticated,
   });
 
@@ -268,6 +273,45 @@ export default function Admin() {
     },
   });
 
+  const addCarouselImageMutation = useMutation({
+    mutationFn: async (data: { imageUrl: string; order: number; enabled: boolean }) => {
+      return await apiRequest("POST", "/api/hero-carousel-images", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hero-carousel-images"] });
+      toast({ title: "Imagen agregada al carrusel" });
+    },
+    onError: () => {
+      toast({ title: "Error al agregar imagen", variant: "destructive" });
+    },
+  });
+
+  const updateCarouselImageMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<HeroCarouselImage> }) => {
+      return await apiRequest("PATCH", `/api/hero-carousel-images/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hero-carousel-images"] });
+      toast({ title: "Imagen del carrusel actualizada" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar imagen", variant: "destructive" });
+    },
+  });
+
+  const deleteCarouselImageMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/hero-carousel-images/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hero-carousel-images"] });
+      toast({ title: "Imagen del carrusel eliminada" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar imagen", variant: "destructive" });
+    },
+  });
+
   const handleLogout = () => {
     setIsAuthenticated(false);
   };
@@ -307,10 +351,11 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="platforms" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="platforms" data-testid="tab-platforms">Plataformas</TabsTrigger>
           <TabsTrigger value="modules" data-testid="tab-modules">Módulos</TabsTrigger>
           <TabsTrigger value="content" data-testid="tab-content">Contenido del Sitio</TabsTrigger>
+          <TabsTrigger value="hero-carousel" data-testid="tab-hero-carousel">Carrusel Hero</TabsTrigger>
           <TabsTrigger value="gallery" data-testid="tab-gallery">Galería</TabsTrigger>
           <TabsTrigger value="quotes" data-testid="tab-quotes">Cotizaciones</TabsTrigger>
         </TabsList>
@@ -758,6 +803,113 @@ export default function Admin() {
                         />
                       ))}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hero-carousel" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Carrusel de Hero</CardTitle>
+                  <CardDescription>
+                    Gestiona las imágenes del carrusel de la sección Hero. Las imágenes habilitadas se mostrarán en rotación automática.
+                  </CardDescription>
+                </div>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880}
+                  onGetUploadParameters={async () => {
+                    const response = await fetch("/api/objects/upload-public", {
+                      method: "POST",
+                    });
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                    if (result.successful && result.successful.length > 0) {
+                      const uploadedUrl = result.successful[0].uploadURL;
+                      const url = new URL(uploadedUrl);
+                      const pathParts = url.pathname.split('/');
+                      const filename = pathParts[pathParts.length - 1];
+                      const localUrl = `/public/${filename}`;
+                      const nextOrder = heroCarouselImages.length > 0 
+                        ? Math.max(...heroCarouselImages.map(img => img.order)) + 1 
+                        : 0;
+                      addCarouselImageMutation.mutate({
+                        imageUrl: localUrl,
+                        order: nextOrder,
+                        enabled: true
+                      });
+                    }
+                  }}
+                  buttonClassName="hover-elevate active-elevate-2"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Imagen
+                </ObjectUploader>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingCarousel ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : heroCarouselImages.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">
+                  No hay imágenes en el carrusel. Agrega la primera imagen usando el botón de arriba.
+                </p>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {heroCarouselImages.map((image) => (
+                    <Card key={image.id} className="overflow-hidden" data-testid={`card-carousel-${image.id}`}>
+                      <div className="aspect-video bg-muted overflow-hidden relative">
+                        <img
+                          src={image.imageUrl}
+                          alt={`Carrusel ${image.order}`}
+                          className="w-full h-full object-cover"
+                          data-testid={`img-carousel-${image.id}`}
+                        />
+                        {!image.enabled && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-sm font-medium">Deshabilitada</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Orden: {image.order}</span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant={image.enabled ? "default" : "outline"}
+                              onClick={() => updateCarouselImageMutation.mutate({
+                                id: image.id,
+                                data: { enabled: !image.enabled }
+                              })}
+                              className="h-7 text-xs hover-elevate active-elevate-2"
+                              data-testid={`button-toggle-carousel-${image.id}`}
+                            >
+                              {image.enabled ? "Habilitada" : "Deshabilitada"}
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 hover-elevate active-elevate-2"
+                              onClick={() => deleteCarouselImageMutation.mutate(image.id)}
+                              data-testid={`button-delete-carousel-${image.id}`}
+                            >
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </CardContent>

@@ -56,11 +56,20 @@ export const galleryImages = pgTable("gallery_images", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const heroCarouselImages = pgTable("hero_carousel_images", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  imageUrl: text("image_url").notNull(),
+  order: integer("order").notNull().default(0),
+  enabled: boolean("enabled").notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const insertPlatformSchema = createInsertSchema(platforms).omit({ id: true });
 export const insertModuleSchema = createInsertSchema(modules).omit({ id: true });
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
 export const insertSiteContentSchema = createInsertSchema(siteContent).omit({ id: true, updatedAt: true });
 export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({ id: true, createdAt: true });
+export const insertHeroCarouselImageSchema = createInsertSchema(heroCarouselImages).omit({ id: true, createdAt: true });
 
 export type Platform = typeof platforms.$inferSelect;
 export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
@@ -76,3 +85,6 @@ export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 
 export type GalleryImage = typeof galleryImages.$inferSelect;
 export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
+
+export type HeroCarouselImage = typeof heroCarouselImages.$inferSelect;
+export type InsertHeroCarouselImage = z.infer<typeof insertHeroCarouselImageSchema>;

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema, insertSiteContentSchema, insertGalleryImageSchema } from "@shared/schema";
+import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema, insertSiteContentSchema, insertGalleryImageSchema, insertHeroCarouselImageSchema } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -237,6 +237,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting gallery image:", error);
       res.status(500).json({ error: "Failed to delete gallery image" });
+    }
+  });
+
+  // HERO CAROUSEL IMAGES
+  app.get("/api/hero-carousel-images", async (req, res) => {
+    try {
+      const images = await storage.getHeroCarouselImages();
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching hero carousel images:", error);
+      res.status(500).json({ error: "Failed to fetch hero carousel images" });
+    }
+  });
+
+  app.post("/api/hero-carousel-images", async (req, res) => {
+    try {
+      const validatedData = insertHeroCarouselImageSchema.parse(req.body);
+      const image = await storage.createHeroCarouselImage(validatedData);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error("Error creating hero carousel image:", error);
+      res.status(400).json({ error: "Invalid hero carousel image data" });
+    }
+  });
+
+  app.patch("/api/hero-carousel-images/:id", async (req, res) => {
+    try {
+      const image = await storage.updateHeroCarouselImage(req.params.id, req.body);
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating hero carousel image:", error);
+      res.status(400).json({ error: "Failed to update hero carousel image" });
+    }
+  });
+
+  app.delete("/api/hero-carousel-images/:id", async (req, res) => {
+    try {
+      await storage.deleteHeroCarouselImage(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting hero carousel image:", error);
+      res.status(500).json({ error: "Failed to delete hero carousel image" });
     }
   });
 
