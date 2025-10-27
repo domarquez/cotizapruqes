@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2, Plus, LogOut, Image as ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, Image as ImageIcon, Check, X } from "lucide-react";
 import InlineEditInput from "@/components/InlineEditInput";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import AdminLogin from "@/components/AdminLogin";
@@ -30,6 +30,70 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Platform, Module, SiteContent, GalleryImage } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
+
+function EditableContentField({
+  content,
+  onSave,
+  isPending
+}: {
+  content: SiteContent;
+  onSave: (value: string) => void;
+  isPending: boolean;
+}) {
+  const [editValue, setEditValue] = useState(content.value);
+  const hasChanges = editValue !== content.value;
+
+  const handleSave = () => {
+    if (hasChanges) {
+      onSave(editValue);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditValue(content.value);
+  };
+
+  return (
+    <div className="grid gap-2">
+      <Label className="text-sm font-medium capitalize">
+        {content.key.replace("hero_", "").replace("feature_", "").replace("features_", "").replace("products_", "").replace("cta_", "").replace("contact_", "").replace(/_/g, " ")}
+      </Label>
+      <div className="flex items-center gap-2">
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="max-w-2xl"
+          data-testid={`input-content-${content.key}`}
+          disabled={isPending}
+        />
+        {hasChanges && (
+          <>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleSave}
+              disabled={isPending}
+              className="h-9 w-9 hover-elevate active-elevate-2"
+              data-testid={`button-save-${content.key}`}
+            >
+              <Check className="h-4 w-4 text-green-600" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleCancel}
+              disabled={isPending}
+              className="h-9 w-9 hover-elevate active-elevate-2"
+              data-testid={`button-cancel-${content.key}`}
+            >
+              <X className="h-4 w-4 text-destructive" />
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -585,24 +649,19 @@ export default function Admin() {
                     {siteContent
                       .filter(c => c.section === "hero" && c.key !== "hero_image_url")
                       .map(content => (
-                        <div key={content.id} className="grid gap-2">
-                          <Label className="text-sm font-medium capitalize">
-                            {content.key.replace("hero_", "").replace(/_/g, " ")}
-                          </Label>
-                          <Input
-                            value={content.value}
-                            onChange={(e) => {
-                              updateSiteContentMutation.mutate({
-                                key: content.key,
-                                value: e.target.value,
-                                type: content.type,
-                                section: content.section
-                              });
-                            }}
-                            className="max-w-2xl"
-                            data-testid={`input-content-${content.key}`}
-                          />
-                        </div>
+                        <EditableContentField
+                          key={content.id}
+                          content={content}
+                          onSave={(value) => {
+                            updateSiteContentMutation.mutate({
+                              key: content.key,
+                              value,
+                              type: content.type,
+                              section: content.section
+                            });
+                          }}
+                          isPending={updateSiteContentMutation.isPending}
+                        />
                       ))}
                   </div>
 
@@ -612,24 +671,19 @@ export default function Admin() {
                     {siteContent
                       .filter(c => c.section === "features")
                       .map(content => (
-                        <div key={content.id} className="grid gap-2">
-                          <Label className="text-sm font-medium capitalize">
-                            {content.key.replace("feature_", "").replace("features_", "").replace(/_/g, " ")}
-                          </Label>
-                          <Input
-                            value={content.value}
-                            onChange={(e) => {
-                              updateSiteContentMutation.mutate({
-                                key: content.key,
-                                value: e.target.value,
-                                type: content.type,
-                                section: content.section
-                              });
-                            }}
-                            className="max-w-2xl"
-                            data-testid={`input-content-${content.key}`}
-                          />
-                        </div>
+                        <EditableContentField
+                          key={content.id}
+                          content={content}
+                          onSave={(value) => {
+                            updateSiteContentMutation.mutate({
+                              key: content.key,
+                              value,
+                              type: content.type,
+                              section: content.section
+                            });
+                          }}
+                          isPending={updateSiteContentMutation.isPending}
+                        />
                       ))}
                   </div>
 
@@ -639,24 +693,19 @@ export default function Admin() {
                     {siteContent
                       .filter(c => c.section === "products")
                       .map(content => (
-                        <div key={content.id} className="grid gap-2">
-                          <Label className="text-sm font-medium capitalize">
-                            {content.key.replace("products_", "").replace(/_/g, " ")}
-                          </Label>
-                          <Input
-                            value={content.value}
-                            onChange={(e) => {
-                              updateSiteContentMutation.mutate({
-                                key: content.key,
-                                value: e.target.value,
-                                type: content.type,
-                                section: content.section
-                              });
-                            }}
-                            className="max-w-2xl"
-                            data-testid={`input-content-${content.key}`}
-                          />
-                        </div>
+                        <EditableContentField
+                          key={content.id}
+                          content={content}
+                          onSave={(value) => {
+                            updateSiteContentMutation.mutate({
+                              key: content.key,
+                              value,
+                              type: content.type,
+                              section: content.section
+                            });
+                          }}
+                          isPending={updateSiteContentMutation.isPending}
+                        />
                       ))}
                   </div>
 
@@ -666,24 +715,19 @@ export default function Admin() {
                     {siteContent
                       .filter(c => c.section === "cta")
                       .map(content => (
-                        <div key={content.id} className="grid gap-2">
-                          <Label className="text-sm font-medium capitalize">
-                            {content.key.replace("cta_", "").replace(/_/g, " ")}
-                          </Label>
-                          <Input
-                            value={content.value}
-                            onChange={(e) => {
-                              updateSiteContentMutation.mutate({
-                                key: content.key,
-                                value: e.target.value,
-                                type: content.type,
-                                section: content.section
-                              });
-                            }}
-                            className="max-w-2xl"
-                            data-testid={`input-content-${content.key}`}
-                          />
-                        </div>
+                        <EditableContentField
+                          key={content.id}
+                          content={content}
+                          onSave={(value) => {
+                            updateSiteContentMutation.mutate({
+                              key: content.key,
+                              value,
+                              type: content.type,
+                              section: content.section
+                            });
+                          }}
+                          isPending={updateSiteContentMutation.isPending}
+                        />
                       ))}
                   </div>
 
@@ -693,24 +737,19 @@ export default function Admin() {
                     {siteContent
                       .filter(c => c.section === "contact")
                       .map(content => (
-                        <div key={content.id} className="grid gap-2">
-                          <Label className="text-sm font-medium capitalize">
-                            {content.key.replace("contact_", "").replace(/_/g, " ")}
-                          </Label>
-                          <Input
-                            value={content.value}
-                            onChange={(e) => {
-                              updateSiteContentMutation.mutate({
-                                key: content.key,
-                                value: e.target.value,
-                                type: content.type,
-                                section: content.section
-                              });
-                            }}
-                            className="max-w-2xl"
-                            data-testid={`input-content-${content.key}`}
-                          />
-                        </div>
+                        <EditableContentField
+                          key={content.id}
+                          content={content}
+                          onSave={(value) => {
+                            updateSiteContentMutation.mutate({
+                              key: content.key,
+                              value,
+                              type: content.type,
+                              section: content.section
+                            });
+                          }}
+                          isPending={updateSiteContentMutation.isPending}
+                        />
                       ))}
                   </div>
                 </div>
