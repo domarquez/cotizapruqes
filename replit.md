@@ -262,17 +262,20 @@ HOUSE_MULTIPLIERS = {
   - Inline editing of all website text organized by sections
   - Direct onChange mutations for instant updates
   - Covers Hero, Features, Products, CTA, and Contact sections
+  - **Hero image upload**: Admin can upload custom hero background image via ObjectUploader
 - Added "Galería" tab in Admin panel
   - Image upload functionality using ObjectUploader
   - Delete functionality for gallery images
   - Grid display with thumbnails and metadata
 - Updated Hero component to read from database instead of hardcoded text
+  - Hero background image now reads from `hero_image_url` in site_content
+  - Graceful fallback to default image if no custom image uploaded
 - Updated Home page to use dynamic content from site_content table
 - Updated Gallery page to display images from gallery_images table
   - Empty state message when no images exist
   - Ordered display based on `order` field
 - Created seed script (`server/seed.ts`) to populate initial site content
-- End-to-end testing confirmed: content editing, image management, and display updates
+- End-to-end testing confirmed: content editing, image management, display updates, and hero image upload
 
 **October 26, 2025 - Image Upload System:**
 - Added `imageUrl` field to platforms and modules tables
