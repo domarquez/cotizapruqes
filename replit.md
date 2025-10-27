@@ -124,3 +124,6 @@ Preferred communication style: Simple, everyday language.
 - All 5 ObjectUploader instances in Admin panel updated to new simplified API
 - Added `public/uploads/*` to .gitignore to exclude uploaded images from version control
 - Image URLs now use simple format: `/uploads/{filename}` instead of Google Storage URLs
+- Added multer error handler middleware to return 400 status codes for validation errors (file size/type)
+- End-to-end testing: ✅ Passed (admin panel loads, all tabs functional, no console errors)
+- Architect review: ✅ Approved (functions as intended, Railway compatible, security recommendations noted)
