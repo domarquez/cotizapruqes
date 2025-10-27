@@ -46,10 +46,15 @@ Custom design system based on Material Design foundations combined with e-commer
 - No global state management library needed due to query-based architecture
 
 **Key User Flows:**
-1. **Home Page:** Hero with CTA, featured products, statistics
+1. **Home Page:** Hero with CTA, featured products, statistics (all text editable via CMS)
 2. **Configurator:** Multi-step product configuration (platform selection → module selection → pricing summary)
-3. **Gallery:** Project showcase grid
-4. **Admin Panel:** Password-protected CRUD operations for platforms, modules, and houses
+3. **Gallery:** Project showcase grid (images managed via CMS)
+4. **Admin Panel:** Password-protected CRUD operations with 5 tabs:
+   - Plataformas: Manage playground and house platforms with image uploads
+   - Módulos: Manage add-on components with image uploads
+   - Contenido del Sitio: Edit all website text content organized by sections
+   - Galería: Manage gallery images with upload and delete
+   - Cotizaciones: View saved customer quotes
 
 ### Backend Architecture
 
@@ -84,7 +89,7 @@ Drizzle ORM chosen for:
 - Native TypeScript support
 
 **Schema Design:**
-Three main tables defined in `shared/schema.ts`:
+Five main tables defined in `shared/schema.ts`:
 
 1. **platforms:** Unified table for both playground and house structures
    - category field: "playground" or "house"
@@ -103,7 +108,22 @@ Three main tables defined in `shared/schema.ts`:
    - Price automatically adjusts based on selected platform size
    - imageUrl field: Optional URL for product image (stored in Replit Object Storage)
 
-3. **quotes:** Customer quotation records
+3. **site_content:** CMS table for all editable website text content
+   - key: Unique identifier for content piece (e.g., "hero_title", "feature_1_description")
+   - value: The actual text content displayed on the website
+   - type: Content type ("text" for all current entries)
+   - section: Organizational grouping (hero, features, products, cta, contact)
+   - Supports upsert operations (update if exists, insert if new)
+   - Admin can edit all website text through unified interface
+
+4. **gallery_images:** CMS table for gallery image management
+   - imageUrl: URL to image stored in Replit Object Storage
+   - title: Display title for the gallery item
+   - description: Optional description text
+   - order: Integer for manual ordering of gallery items
+   - Admin can add/delete images and they appear automatically on gallery page
+
+5. **quotes:** Customer quotation records
    - Client contact information
    - Configuration stored as JSON string
    - Product type and use type metadata
@@ -229,7 +249,32 @@ HOUSE_MULTIPLIERS = {
 - Images only display when `imageUrl` field is populated
 - Admin panel shows 12x12 thumbnails with upload buttons in table rows
 
-**Recent Changes (October 26, 2025):**
+**Recent Changes:**
+
+**October 27, 2025 - Full CMS System Implementation:**
+- Created `site_content` table for all editable website text content
+  - Organized by sections: hero, features, products, cta, contact
+  - Supports upsert operations for easy content updates
+- Created `gallery_images` table for gallery image management
+  - Includes ordering system for manual arrangement
+  - Images stored in Replit Object Storage
+- Added "Contenido del Sitio" tab in Admin panel
+  - Inline editing of all website text organized by sections
+  - Direct onChange mutations for instant updates
+  - Covers Hero, Features, Products, CTA, and Contact sections
+- Added "Galería" tab in Admin panel
+  - Image upload functionality using ObjectUploader
+  - Delete functionality for gallery images
+  - Grid display with thumbnails and metadata
+- Updated Hero component to read from database instead of hardcoded text
+- Updated Home page to use dynamic content from site_content table
+- Updated Gallery page to display images from gallery_images table
+  - Empty state message when no images exist
+  - Ordered display based on `order` field
+- Created seed script (`server/seed.ts`) to populate initial site content
+- End-to-end testing confirmed: content editing, image management, and display updates
+
+**October 26, 2025 - Image Upload System:**
 - Added `imageUrl` field to platforms and modules tables
 - Implemented image upload functionality in Admin panel
 - Updated ConfiguratorPanel to display platform images with uniform sizing
