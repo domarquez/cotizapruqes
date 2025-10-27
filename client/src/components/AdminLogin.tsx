@@ -64,10 +64,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             >
               Ingresar
             </Button>
-
-            <p className="text-sm text-muted-foreground text-center">
-              Contraseña de prueba: <code className="bg-muted px-2 py-1 rounded">admin123</code>
-            </p>
           </form>
         </CardContent>
       </Card>
