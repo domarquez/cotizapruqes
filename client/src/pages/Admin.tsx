@@ -533,8 +533,57 @@ export default function Admin() {
                   {/* Hero Section */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold border-b pb-2">Sección Principal (Hero)</h3>
+                    
+                    {/* Hero Image Upload */}
+                    <div className="grid gap-2">
+                      <Label className="text-sm font-medium">Imagen de Fondo del Hero</Label>
+                      <div className="flex items-center gap-4">
+                        {siteContent.find(c => c.key === "hero_image_url")?.value && (
+                          <div className="w-32 h-20 rounded-md overflow-hidden border">
+                            <img
+                              src={siteContent.find(c => c.key === "hero_image_url")?.value}
+                              alt="Hero background"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880}
+                          onGetUploadParameters={async () => {
+                            const response = await fetch("/api/objects/upload", {
+                              method: "POST",
+                            });
+                            const data = await response.json();
+                            return {
+                              method: "PUT" as const,
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadedUrl = result.successful[0].uploadURL;
+                              updateSiteContentMutation.mutate({
+                                key: "hero_image_url",
+                                value: uploadedUrl,
+                                type: "text",
+                                section: "hero"
+                              });
+                            }
+                          }}
+                          buttonClassName="hover-elevate active-elevate-2"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          {siteContent.find(c => c.key === "hero_image_url")?.value ? "Cambiar Imagen" : "Subir Imagen"}
+                        </ObjectUploader>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Imagen de fondo para la sección principal (recomendado: 1920x600px)
+                      </p>
+                    </div>
+
                     {siteContent
-                      .filter(c => c.section === "hero")
+                      .filter(c => c.section === "hero" && c.key !== "hero_image_url")
                       .map(content => (
                         <div key={content.id} className="grid gap-2">
                           <Label className="text-sm font-medium capitalize">

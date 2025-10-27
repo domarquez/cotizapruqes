@@ -14,11 +14,13 @@ export default function Hero() {
     return content?.value || defaultValue;
   };
 
+  const heroImageUrl = getContent("hero_image_url", heroImage);
+
   return (
     <section className="relative w-full min-h-[600px] flex items-center justify-center overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${heroImageUrl})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
       </div>
