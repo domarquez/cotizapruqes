@@ -1,7 +1,7 @@
-import { type Platform, type Module, type Quote, type InsertPlatform, type InsertModule, type InsertQuote } from "@shared/schema";
-import { platforms, modules, quotes } from "@shared/schema";
+import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage } from "@shared/schema";
+import { platforms, modules, quotes, siteContent, galleryImages } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 export interface IStorage {
   // Platforms
@@ -22,6 +22,18 @@ export interface IStorage {
   getQuotes(): Promise<Quote[]>;
   getQuote(id: string): Promise<Quote | undefined>;
   createQuote(quote: InsertQuote): Promise<Quote>;
+  
+  // Site Content
+  getSiteContent(): Promise<SiteContent[]>;
+  getSiteContentByKey(key: string): Promise<SiteContent | undefined>;
+  upsertSiteContent(content: InsertSiteContent): Promise<SiteContent>;
+  
+  // Gallery Images
+  getGalleryImages(): Promise<GalleryImage[]>;
+  getGalleryImage(id: string): Promise<GalleryImage | undefined>;
+  createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
+  updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage>;
+  deleteGalleryImage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +115,71 @@ export class DatabaseStorage implements IStorage {
       .values(insertQuote)
       .returning();
     return quote;
+  }
+
+  // Site Content
+  async getSiteContent(): Promise<SiteContent[]> {
+    return await db.select().from(siteContent);
+  }
+
+  async getSiteContentByKey(key: string): Promise<SiteContent | undefined> {
+    const [content] = await db.select().from(siteContent).where(eq(siteContent.key, key));
+    return content || undefined;
+  }
+
+  async upsertSiteContent(insertContent: InsertSiteContent): Promise<SiteContent> {
+    const existing = await this.getSiteContentByKey(insertContent.key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(siteContent)
+        .set({ 
+          value: insertContent.value,
+          type: insertContent.type,
+          section: insertContent.section,
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(siteContent.key, insertContent.key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(siteContent)
+        .values(insertContent)
+        .returning();
+      return created;
+    }
+  }
+
+  // Gallery Images
+  async getGalleryImages(): Promise<GalleryImage[]> {
+    return await db.select().from(galleryImages).orderBy(asc(galleryImages.order));
+  }
+
+  async getGalleryImage(id: string): Promise<GalleryImage | undefined> {
+    const [image] = await db.select().from(galleryImages).where(eq(galleryImages.id, id));
+    return image || undefined;
+  }
+
+  async createGalleryImage(insertImage: InsertGalleryImage): Promise<GalleryImage> {
+    const [image] = await db
+      .insert(galleryImages)
+      .values(insertImage)
+      .returning();
+    return image;
+  }
+
+  async updateGalleryImage(id: string, updateData: Partial<InsertGalleryImage>): Promise<GalleryImage> {
+    const [image] = await db
+      .update(galleryImages)
+      .set(updateData)
+      .where(eq(galleryImages.id, id))
+      .returning();
+    return image;
+  }
+
+  async deleteGalleryImage(id: string): Promise<void> {
+    await db.delete(galleryImages).where(eq(galleryImages.id, id));
   }
 }
 
