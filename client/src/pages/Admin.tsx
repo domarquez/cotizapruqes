@@ -28,7 +28,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import AdminLogin from "@/components/AdminLogin";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Platform, Module } from "@shared/schema";
+import type { Platform, Module, SiteContent, GalleryImage } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
 export default function Admin() {
@@ -46,6 +46,16 @@ export default function Admin() {
 
   const { data: modules = [], isLoading: loadingModules } = useQuery<Module[]>({
     queryKey: ["/api/modules"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: siteContent = [], isLoading: loadingSiteContent } = useQuery<SiteContent[]>({
+    queryKey: ["/api/site-content"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: galleryImages = [], isLoading: loadingGallery } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery-images"],
     enabled: isAuthenticated,
   });
 
@@ -155,6 +165,45 @@ export default function Admin() {
     },
   });
 
+  const updateSiteContentMutation = useMutation({
+    mutationFn: async (data: { key: string; value: string; type: string; section: string }) => {
+      return await apiRequest("POST", "/api/site-content", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-content"] });
+      toast({ title: "Contenido actualizado" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar contenido", variant: "destructive" });
+    },
+  });
+
+  const addGalleryImageMutation = useMutation({
+    mutationFn: async (data: { imageUrl: string; title: string; description?: string; order: number }) => {
+      return await apiRequest("POST", "/api/gallery-images", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery-images"] });
+      toast({ title: "Imagen agregada a galería" });
+    },
+    onError: () => {
+      toast({ title: "Error al agregar imagen", variant: "destructive" });
+    },
+  });
+
+  const deleteGalleryImageMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/gallery-images/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery-images"] });
+      toast({ title: "Imagen eliminada" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar imagen", variant: "destructive" });
+    },
+  });
+
   const handleLogout = () => {
     setIsAuthenticated(false);
   };
@@ -194,9 +243,11 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="platforms" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="platforms" data-testid="tab-platforms">Plataformas</TabsTrigger>
           <TabsTrigger value="modules" data-testid="tab-modules">Módulos</TabsTrigger>
+          <TabsTrigger value="content" data-testid="tab-content">Contenido del Sitio</TabsTrigger>
+          <TabsTrigger value="gallery" data-testid="tab-gallery">Galería</TabsTrigger>
           <TabsTrigger value="quotes" data-testid="tab-quotes">Cotizaciones</TabsTrigger>
         </TabsList>
 
@@ -461,6 +512,250 @@ export default function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="content" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Contenido del Sitio</CardTitle>
+              <CardDescription>
+                Edita todos los textos e imágenes de tu página web
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingSiteContent ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : (
+                <div className="space-y-8">
+                  {/* Hero Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Sección Principal (Hero)</h3>
+                    {siteContent
+                      .filter(c => c.section === "hero")
+                      .map(content => (
+                        <div key={content.id} className="grid gap-2">
+                          <Label className="text-sm font-medium capitalize">
+                            {content.key.replace("hero_", "").replace(/_/g, " ")}
+                          </Label>
+                          <Input
+                            value={content.value}
+                            onChange={(e) => {
+                              updateSiteContentMutation.mutate({
+                                key: content.key,
+                                value: e.target.value,
+                                type: content.type,
+                                section: content.section
+                              });
+                            }}
+                            className="max-w-2xl"
+                            data-testid={`input-content-${content.key}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Features Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Sección ¿Por qué elegirnos?</h3>
+                    {siteContent
+                      .filter(c => c.section === "features")
+                      .map(content => (
+                        <div key={content.id} className="grid gap-2">
+                          <Label className="text-sm font-medium capitalize">
+                            {content.key.replace("feature_", "").replace("features_", "").replace(/_/g, " ")}
+                          </Label>
+                          <Input
+                            value={content.value}
+                            onChange={(e) => {
+                              updateSiteContentMutation.mutate({
+                                key: content.key,
+                                value: e.target.value,
+                                type: content.type,
+                                section: content.section
+                              });
+                            }}
+                            className="max-w-2xl"
+                            data-testid={`input-content-${content.key}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Products Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Sección Productos</h3>
+                    {siteContent
+                      .filter(c => c.section === "products")
+                      .map(content => (
+                        <div key={content.id} className="grid gap-2">
+                          <Label className="text-sm font-medium capitalize">
+                            {content.key.replace("products_", "").replace(/_/g, " ")}
+                          </Label>
+                          <Input
+                            value={content.value}
+                            onChange={(e) => {
+                              updateSiteContentMutation.mutate({
+                                key: content.key,
+                                value: e.target.value,
+                                type: content.type,
+                                section: content.section
+                              });
+                            }}
+                            className="max-w-2xl"
+                            data-testid={`input-content-${content.key}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* CTA Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Llamada a la Acción (CTA)</h3>
+                    {siteContent
+                      .filter(c => c.section === "cta")
+                      .map(content => (
+                        <div key={content.id} className="grid gap-2">
+                          <Label className="text-sm font-medium capitalize">
+                            {content.key.replace("cta_", "").replace(/_/g, " ")}
+                          </Label>
+                          <Input
+                            value={content.value}
+                            onChange={(e) => {
+                              updateSiteContentMutation.mutate({
+                                key: content.key,
+                                value: e.target.value,
+                                type: content.type,
+                                section: content.section
+                              });
+                            }}
+                            className="max-w-2xl"
+                            data-testid={`input-content-${content.key}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Contact Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Información de Contacto</h3>
+                    {siteContent
+                      .filter(c => c.section === "contact")
+                      .map(content => (
+                        <div key={content.id} className="grid gap-2">
+                          <Label className="text-sm font-medium capitalize">
+                            {content.key.replace("contact_", "").replace(/_/g, " ")}
+                          </Label>
+                          <Input
+                            value={content.value}
+                            onChange={(e) => {
+                              updateSiteContentMutation.mutate({
+                                key: content.key,
+                                value: e.target.value,
+                                type: content.type,
+                                section: content.section
+                              });
+                            }}
+                            className="max-w-2xl"
+                            data-testid={`input-content-${content.key}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="gallery" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Galería de Imágenes</CardTitle>
+                  <CardDescription>
+                    Gestiona las imágenes que aparecen en la galería de tu sitio
+                  </CardDescription>
+                </div>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880}
+                  onGetUploadParameters={async () => {
+                    const response = await fetch("/api/objects/upload", {
+                      method: "POST",
+                    });
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                    if (result.successful && result.successful.length > 0) {
+                      const uploadedUrl = result.successful[0].uploadURL;
+                      const nextOrder = galleryImages.length > 0 
+                        ? Math.max(...galleryImages.map(img => img.order)) + 1 
+                        : 0;
+                      addGalleryImageMutation.mutate({
+                        imageUrl: uploadedUrl,
+                        title: "Nueva imagen",
+                        order: nextOrder
+                      });
+                    }
+                  }}
+                  buttonClassName="hover-elevate active-elevate-2"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Imagen
+                </ObjectUploader>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingGallery ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : galleryImages.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">
+                  No hay imágenes en la galería. Agrega la primera imagen usando el botón de arriba.
+                </p>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {galleryImages.map((image) => (
+                    <Card key={image.id} className="overflow-hidden">
+                      <div className="aspect-video bg-muted overflow-hidden">
+                        <img
+                          src={image.imageUrl}
+                          alt={image.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <CardContent className="p-4 space-y-2">
+                        <Input
+                          value={image.title}
+                          onChange={(e) => {
+                            // Could implement title update here
+                          }}
+                          placeholder="Título de la imagen"
+                          className="text-sm"
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Orden: {image.order}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 hover-elevate active-elevate-2"
+                            onClick={() => deleteGalleryImageMutation.mutate(image.id)}
+                            data-testid={`button-delete-gallery-${image.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
