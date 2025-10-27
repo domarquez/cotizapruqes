@@ -16,6 +16,9 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
+// Serve static files from public/uploads directory
+app.use('/uploads', express.static('public/uploads'));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
