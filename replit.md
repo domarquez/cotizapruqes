@@ -63,6 +63,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 27, 2025 - House Configurator Size Display Fix:**
+- Fixed issue where house platform sizes were not displaying in the configurator
+- Problem: Code was trying to access non-existent `item.size` field
+- Solution: Both playgrounds and houses now correctly use `item.height` field from database
+- Verified: House sizes (e.g., "2m x 2m") now display correctly with prices
+- End-to-end testing confirmed correct display for both domestic and public pricing
+
 **October 27, 2025 - Gallery Price Feature:**
 - Added `price` field to `gallery_images` table (integer, nullable)
 - Updated Admin panel Gallery tab:

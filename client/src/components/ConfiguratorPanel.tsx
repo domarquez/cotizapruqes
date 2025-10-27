@@ -286,7 +286,7 @@ export default function ConfiguratorPanel() {
                   const price = useType === "domestic" 
                     ? parseFloat(item.priceDomestic) 
                     : parseFloat(item.pricePublic);
-                  const label = productType === "playground" ? item.height : item.size;
+                  const label = item.height;
                   return (
                     <button
                       key={item.id}
