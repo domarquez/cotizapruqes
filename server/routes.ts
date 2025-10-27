@@ -33,7 +33,7 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // IMAGE UPLOAD - Local storage
-  app.post("/api/upload-image", upload.single('image'), async (req, res) => {
+  app.post("/api/upload-image", upload.single('image'), async (req, res, next) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -43,9 +43,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageUrl = `/uploads/${req.file.filename}`;
       res.json({ imageUrl });
     } catch (error) {
-      console.error("Error uploading image:", error);
-      res.status(500).json({ error: "Failed to upload image" });
+      next(error);
     }
+  });
+
+  // Multer error handler - must be defined after upload routes
+  app.use((error: any, req: any, res: any, next: any) => {
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File size exceeds 10MB limit' });
+      }
+      return res.status(400).json({ error: error.message });
+    } else if (error && error.message === 'Only image files are allowed') {
+      return res.status(400).json({ error: 'Only image files are allowed' });
+    }
+    next(error);
   });
 
   // PLATFORMS

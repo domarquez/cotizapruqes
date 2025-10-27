@@ -49,8 +49,9 @@ Preferred communication style: Simple, everyday language.
 - The system automatically calculates adjusted prices; admins only manage base prices.
 
 ### Image Management
-- **Object Storage Integration**: Replit Object Storage (Google Cloud Storage) for product and content images.
-- **Upload**: Simplified custom `ObjectUploader` component (native file input) handles image uploads via signed URLs from the backend.
+- **Storage**: Local filesystem storage (`public/uploads/`) for product and content images, compatible with Railway deployment.
+- **Upload**: Custom `ObjectUploader` component (native file input) uploads images via FormData to `/api/upload-image` endpoint using multer middleware.
+- **Serving**: Express static middleware serves images from `/uploads/` path.
 - **Display**: Images are displayed with consistent sizing and aspect ratios across the application.
 
 ## External Dependencies
@@ -113,3 +114,13 @@ Preferred communication style: Simple, everyday language.
 - Images now use local URL format `/public/{filename}` instead of Google Storage URLs
 - Gallery management system with image upload and deletion
 - All website text content fully editable through Admin panel organized by semantic sections
+
+**October 27, 2025 - Migration to Local Filesystem Storage:**
+- Migrated from Replit Object Storage (Google Cloud) to local filesystem storage for Railway compatibility
+- Created `/api/upload-image` endpoint using multer middleware to handle file uploads
+- Images saved to `public/uploads/` directory and served via Express static middleware at `/uploads/` path
+- Updated `ObjectUploader` component to use FormData POST requests instead of signed URL uploads
+- Removed `onGetUploadParameters` prop requirement from ObjectUploader interface
+- All 5 ObjectUploader instances in Admin panel updated to new simplified API
+- Added `public/uploads/*` to .gitignore to exclude uploaded images from version control
+- Image URLs now use simple format: `/uploads/{filename}` instead of Google Storage URLs
