@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema } from "@shared/schema";
+import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema, insertSiteContentSchema, insertGalleryImageSchema } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -147,6 +147,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating quote:", error);
       res.status(400).json({ error: "Invalid quote data" });
+    }
+  });
+
+  // SITE CONTENT
+  app.get("/api/site-content", async (req, res) => {
+    try {
+      const content = await storage.getSiteContent();
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching site content:", error);
+      res.status(500).json({ error: "Failed to fetch site content" });
+    }
+  });
+
+  app.get("/api/site-content/:key", async (req, res) => {
+    try {
+      const content = await storage.getSiteContentByKey(req.params.key);
+      if (!content) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching site content:", error);
+      res.status(500).json({ error: "Failed to fetch site content" });
+    }
+  });
+
+  app.post("/api/site-content", async (req, res) => {
+    try {
+      const validatedData = insertSiteContentSchema.parse(req.body);
+      const content = await storage.upsertSiteContent(validatedData);
+      res.status(201).json(content);
+    } catch (error) {
+      console.error("Error creating/updating site content:", error);
+      res.status(400).json({ error: "Invalid site content data" });
+    }
+  });
+
+  // GALLERY IMAGES
+  app.get("/api/gallery-images", async (req, res) => {
+    try {
+      const images = await storage.getGalleryImages();
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching gallery images:", error);
+      res.status(500).json({ error: "Failed to fetch gallery images" });
+    }
+  });
+
+  app.get("/api/gallery-images/:id", async (req, res) => {
+    try {
+      const image = await storage.getGalleryImage(req.params.id);
+      if (!image) {
+        return res.status(404).json({ error: "Gallery image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      console.error("Error fetching gallery image:", error);
+      res.status(500).json({ error: "Failed to fetch gallery image" });
+    }
+  });
+
+  app.post("/api/gallery-images", async (req, res) => {
+    try {
+      const validatedData = insertGalleryImageSchema.parse(req.body);
+      const image = await storage.createGalleryImage(validatedData);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error("Error creating gallery image:", error);
+      res.status(400).json({ error: "Invalid gallery image data" });
+    }
+  });
+
+  app.patch("/api/gallery-images/:id", async (req, res) => {
+    try {
+      const image = await storage.updateGalleryImage(req.params.id, req.body);
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating gallery image:", error);
+      res.status(400).json({ error: "Failed to update gallery image" });
+    }
+  });
+
+  app.delete("/api/gallery-images/:id", async (req, res) => {
+    try {
+      await storage.deleteGalleryImage(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting gallery image:", error);
+      res.status(500).json({ error: "Failed to delete gallery image" });
     }
   });
 
