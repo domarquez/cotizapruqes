@@ -63,6 +63,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 27, 2025 - Gallery Price Feature:**
+- Added `price` field to `gallery_images` table (integer, nullable)
+- Updated Admin panel Gallery tab:
+  - Added editable price input field (Bs) for each gallery image
+  - Added editable title field with auto-save on change
+  - Improved layout with labels and better spacing
+- Updated public Gallery page:
+  - Display price in Bolivianos (Bs) format below description
+  - Price shown with separator (e.g., "Bs 1.500")
+  - Only displays price if value is set
+- Created `updateGalleryImageMutation` for updating gallery images
+- Database migration applied successfully
+
 **October 27, 2025 - Hero Carousel Implementation:**
 - Created `hero_carousel_images` database table with fields: imageUrl, order, enabled
 - Implemented complete storage CRUD operations in server/storage.ts

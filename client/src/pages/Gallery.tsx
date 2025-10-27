@@ -51,6 +51,13 @@ export default function Gallery() {
                       {image.description}
                     </p>
                   )}
+                  {image.price && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-lg font-bold text-primary" data-testid={`text-gallery-price-${image.id}`}>
+                        Bs {image.price.toLocaleString('es-BO')}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

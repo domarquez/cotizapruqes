@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FC } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +95,119 @@ function EditableContentField({
     </div>
   );
 }
+
+const GalleryImageCard: FC<{
+  image: GalleryImage;
+  onUpdate: (id: string, data: Partial<GalleryImage>) => void;
+  onDelete: (id: string) => void;
+}> = ({ image, onUpdate, onDelete }) => {
+  const [editTitle, setEditTitle] = useState(image.title);
+  const [editPrice, setEditPrice] = useState<number | null>(image.price || null);
+  const titleChanged = editTitle !== image.title;
+  const priceChanged = editPrice !== image.price;
+
+  return (
+    <Card className="overflow-hidden" data-testid={`card-gallery-${image.id}`}>
+      <div className="aspect-video bg-muted overflow-hidden">
+        <img
+          src={image.imageUrl}
+          alt={image.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <CardContent className="p-4 space-y-2">
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Título</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Título de la imagen"
+              className="text-sm"
+              data-testid={`input-gallery-title-${image.id}`}
+            />
+            {titleChanged && (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    onUpdate(image.id, { title: editTitle });
+                  }}
+                  className="h-9 w-9 hover-elevate active-elevate-2"
+                  data-testid={`button-save-title-${image.id}`}
+                >
+                  <Check className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setEditTitle(image.title)}
+                  className="h-9 w-9 hover-elevate active-elevate-2"
+                  data-testid={`button-cancel-title-${image.id}`}
+                >
+                  <X className="h-4 w-4 text-destructive" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Precio (Bs)</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={editPrice === null ? "" : editPrice}
+              onChange={(e) => {
+                const value = e.target.value === "" ? null : parseInt(e.target.value);
+                setEditPrice(value);
+              }}
+              placeholder="Precio en Bolivianos"
+              className="text-sm"
+              data-testid={`input-gallery-price-${image.id}`}
+            />
+            {priceChanged && (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    onUpdate(image.id, { price: editPrice });
+                  }}
+                  className="h-9 w-9 hover-elevate active-elevate-2"
+                  data-testid={`button-save-price-${image.id}`}
+                >
+                  <Check className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setEditPrice(image.price || null)}
+                  className="h-9 w-9 hover-elevate active-elevate-2"
+                  data-testid={`button-cancel-price-${image.id}`}
+                >
+                  <X className="h-4 w-4 text-destructive" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-xs text-muted-foreground">Orden: {image.order}</span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 hover-elevate active-elevate-2"
+            onClick={() => onDelete(image.id)}
+            data-testid={`button-delete-gallery-${image.id}`}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -257,6 +371,19 @@ export default function Admin() {
     },
     onError: () => {
       toast({ title: "Error al agregar imagen", variant: "destructive" });
+    },
+  });
+
+  const updateGalleryImageMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<GalleryImage> }) => {
+      return await apiRequest("PATCH", `/api/gallery-images/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery-images"] });
+      toast({ title: "Imagen de galería actualizada" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar imagen", variant: "destructive" });
     },
   });
 
@@ -975,37 +1102,12 @@ export default function Admin() {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {galleryImages.map((image) => (
-                    <Card key={image.id} className="overflow-hidden">
-                      <div className="aspect-video bg-muted overflow-hidden">
-                        <img
-                          src={image.imageUrl}
-                          alt={image.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <CardContent className="p-4 space-y-2">
-                        <Input
-                          value={image.title}
-                          onChange={(e) => {
-                            // Could implement title update here
-                          }}
-                          placeholder="Título de la imagen"
-                          className="text-sm"
-                        />
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">Orden: {image.order}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 hover-elevate active-elevate-2"
-                            onClick={() => deleteGalleryImageMutation.mutate(image.id)}
-                            data-testid={`button-delete-gallery-${image.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <GalleryImageCard
+                      key={image.id}
+                      image={image}
+                      onUpdate={(id, data) => updateGalleryImageMutation.mutate({ id, data })}
+                      onDelete={(id) => deleteGalleryImageMutation.mutate(id)}
+                    />
                   ))}
                 </div>
               )}

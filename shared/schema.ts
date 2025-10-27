@@ -52,6 +52,7 @@ export const galleryImages = pgTable("gallery_images", {
   imageUrl: text("image_url").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  price: integer("price"),
   order: integer("order").notNull().default(0),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
