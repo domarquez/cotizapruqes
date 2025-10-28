@@ -243,12 +243,12 @@ export default function ConfiguratorPanel() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
-                <Card className={`cursor-pointer transition-all ${useType === "domestic" ? "ring-2 ring-primary" : ""}`}
+                <Card className={`cursor-pointer transition-all min-w-0 ${useType === "domestic" ? "ring-2 ring-primary" : ""}`}
                   onClick={() => setUseType("domestic")}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      Uso Domicilio
-                      {useType === "domestic" && <Badge>Seleccionado</Badge>}
+                  <CardHeader className="space-y-1.5">
+                    <CardTitle className="flex items-center flex-wrap gap-2 text-base">
+                      <span className="shrink-0">Uso Domicilio</span>
+                      {useType === "domestic" && <Badge className="shrink-0">Seleccionado</Badge>}
                     </CardTitle>
                     <CardDescription className="text-sm">
                       Para casas y jardines particulares
@@ -265,12 +265,12 @@ export default function ConfiguratorPanel() {
                   </CardContent>
                 </Card>
 
-                <Card className={`cursor-pointer transition-all ${useType === "public" ? "ring-2 ring-primary" : ""}`}
+                <Card className={`cursor-pointer transition-all min-w-0 ${useType === "public" ? "ring-2 ring-primary" : ""}`}
                   onClick={() => setUseType("public")}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      Uso Público
-                      {useType === "public" && <Badge>Seleccionado</Badge>}
+                  <CardHeader className="space-y-1.5">
+                    <CardTitle className="flex items-center flex-wrap gap-2 text-base">
+                      <span className="shrink-0">Uso Público</span>
+                      {useType === "public" && <Badge className="shrink-0">Seleccionado</Badge>}
                     </CardTitle>
                     <CardDescription className="text-sm">
                       Para colegios, plazas y espacios públicos
@@ -329,7 +329,7 @@ export default function ConfiguratorPanel() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <Button
                       variant={productType === "playground" ? "default" : "outline"}
                       onClick={() => {

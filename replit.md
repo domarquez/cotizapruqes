@@ -14,7 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **Components**: shadcn/ui library (New York variant) built on Radix UI primitives.
 - **State Management**: TanStack Query for server data, `useState` for local UI state.
 - **Key User Flows**: Home (CMS dynamic content), Configurator (multi-step product and pricing selection), Gallery (CMS-managed showcase), Admin Panel (CRUD for platforms, modules, content, quotes).
-- **UI/UX Decisions**: Progressive disclosure wizard flow for mobile configurator, visual step indicators, auto-scroll, responsive design.
+- **UI/UX Decisions**: Progressive disclosure wizard flow for mobile configurator, visual step indicators, auto-scroll, fully responsive design with vertical stacking on mobile (< 640px).
 
 ### Backend
 - **Runtime**: Node.js with Express.js (TypeScript, ESM modules).
