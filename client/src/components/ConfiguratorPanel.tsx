@@ -498,7 +498,7 @@ export default function ConfiguratorPanel() {
                     
                     return (
                       <Tabs defaultValue={firstCategory} className="w-full">
-                        <TabsList className={`grid w-full grid-cols-${Math.min(availableCategories.length, 4)}`}>
+                        <TabsList className={`sticky top-0 z-10 grid w-full grid-cols-${Math.min(availableCategories.length, 4)} bg-card`}>
                           {availableCategories.map(([key, label]) => (
                             <TabsTrigger 
                               key={key} 
