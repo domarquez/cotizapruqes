@@ -1,7 +1,20 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, boolean, customType } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import { z} from "zod";
+
+// Custom bytea type for storing binary data (images)
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+  toDriver(value: Buffer) {
+    return value;
+  },
+  fromDriver(value: unknown) {
+    return value as Buffer;
+  },
+});
 
 export const platforms = pgTable("platforms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -65,12 +78,22 @@ export const heroCarouselImages = pgTable("hero_carousel_images", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const productImages = pgTable("product_images", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  filename: text("filename").notNull(),
+  mimeType: text("mime_type").notNull(),
+  byteLength: integer("byte_length").notNull(),
+  data: bytea("data").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const insertPlatformSchema = createInsertSchema(platforms).omit({ id: true });
 export const insertModuleSchema = createInsertSchema(modules).omit({ id: true });
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
 export const insertSiteContentSchema = createInsertSchema(siteContent).omit({ id: true, updatedAt: true });
 export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({ id: true, createdAt: true });
 export const insertHeroCarouselImageSchema = createInsertSchema(heroCarouselImages).omit({ id: true, createdAt: true });
+export const insertProductImageSchema = createInsertSchema(productImages).omit({ id: true, createdAt: true });
 
 export type Platform = typeof platforms.$inferSelect;
 export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
@@ -89,3 +112,6 @@ export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
 
 export type HeroCarouselImage = typeof heroCarouselImages.$inferSelect;
 export type InsertHeroCarouselImage = z.infer<typeof insertHeroCarouselImageSchema>;
+
+export type ProductImage = typeof productImages.$inferSelect;
+export type InsertProductImage = z.infer<typeof insertProductImageSchema>;
