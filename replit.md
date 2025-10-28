@@ -48,14 +48,15 @@ Preferred communication style: Simple, everyday language.
         - 80cm: 0.8x
         - 100cm: 1.0x (base)
         - 120cm/150cm: 1.2x
-    - **Casitas (Houses)**: Base price is for 2m x 2m houses (4 mt2). Prices calculated by **actual area**:
-        - Formula: `precio_modulo = precio_base × (área_casa / 4)`
+    - **Casitas (Houses)**: Base price is for 1m x 1m houses (1 mt2). Prices calculated by **actual area**:
+        - Formula: `precio_modulo = precio_base × área_casa`
         - Examples:
-            - 1.5x1.5m (2.25 mt2): 2.25/4 = 0.5625x
-            - 2x2m (4 mt2): 4/4 = 1.0x (base)
-            - 2.5x2.5m (6.25 mt2): 6.25/4 = 1.5625x
-            - 3x3m (9 mt2): 9/4 = 2.25x
-- The system automatically calculates adjusted prices; admins only manage base prices per mt2.
+            - 1x1m (1 mt2): 1.0x (base)
+            - 1.5x1.5m (2.25 mt2): 2.25x
+            - 2x2m (4 mt2): 4.0x
+            - 2.5x2.5m (6.25 mt2): 6.25x
+            - 3x3m (9 mt2): 9.0x
+- The system automatically calculates adjusted prices; admins only manage base prices per mt2 (1x1m base).
 
 ### Image Management
 - **Storage**: Local filesystem storage (`public/uploads/`) for product and content images, compatible with Railway deployment.
@@ -139,11 +140,10 @@ Preferred communication style: Simple, everyday language.
 
 **October 28, 2025 - House Module Pricing by Actual Area:**
 - Updated module pricing logic for houses (casitas) to calculate by actual area in mt2 instead of fixed multipliers
-- Implemented area-based calculation: `module_price = base_price × (house_area / 4)`
-- Base area reference: 2x2m = 4 mt2
-- Examples: 1.5x1.5m (2.25 mt2) = 0.5625x, 2x2m (4 mt2) = 1.0x, 3x3m (9 mt2) = 2.25x
+- Implemented area-based calculation: `module_price = base_price × house_area`
+- Base area reference: 1x1m = 1 mt2 (factor 1.0)
+- Examples: 1x1m = 1.0x, 1.5x1.5m (2.25 mt2) = 2.25x, 2x2m (4 mt2) = 4.0x, 3x3m (9 mt2) = 9.0x
+- Added 1x1m house platform with price Bs 3.200 (domestic) as base reference
 - Playground pricing unchanged (still uses fixed multipliers based on height)
 - Modified `getPlatformMultiplier()` function in `shared/pricing.ts` to branch by platform category
 - Added `calculateHouseAreaM2()` helper function for area calculation
-- End-to-end testing: ✅ Passed (verified correct pricing for 1.5x1.5m, 2x2m, and 3x3m houses)
-- Architect review: ✅ Approved (mathematically correct, no regressions on playground pricing)

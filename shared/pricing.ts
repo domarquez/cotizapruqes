@@ -16,10 +16,10 @@ const PLAYGROUND_MULTIPLIERS: Record<number, number> = {
 };
 
 /**
- * Base area for HOUSE module pricing (2m x 2m = 4 mt2)
+ * Base area for HOUSE module pricing (1m x 1m = 1 mt2)
  * Module prices in database are per mt2 based on this reference area
  */
-const HOUSE_BASE_AREA_M2 = 4.0; // 2m x 2m
+const HOUSE_BASE_AREA_M2 = 1.0; // 1m x 1m
 
 const DEFAULT_MULTIPLIER = 1.0;
 
