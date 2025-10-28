@@ -50,3 +50,42 @@ Preferred communication style: Simple, everyday language.
 - **Utilities**: class-variance-authority, clsx, tailwind-merge, date-fns, jspdf.
 - **Database**: @neondatabase/serverless, ws.
 - **Development Tools**: @replit/vite-plugin-*, tsx, drizzle-kit.
+
+## Recent Changes
+
+**October 28, 2025 - Expanded Module Categories & Admin Editing:**
+- **Problem**: Only 3 hardcoded module categories (techos, resbalines, accesorios) were available; categories couldn't be edited after module creation
+- **Solution**: Expanded to 8 categories with dynamic tab rendering and inline editing in admin panel
+- **Module Categories (8 total)**:
+  - `techos` - Techos
+  - `resbalines` - Resbalines
+  - `columpios` - Columpios
+  - `trepadoras` - Trepadoras
+  - `barandas` - Barandas
+  - `sube_y_baja` - Sube y Baja
+  - `calistenia` - Calistenia
+  - `accesorios` - Accesorios
+- **Dynamic Category System**:
+  - `MODULE_CATEGORIES` constant defines all available categories
+  - Configurator dynamically renders tabs only for categories with modules (price > 0)
+  - Empty categories automatically hidden from UI
+  - First available category auto-selected as default
+- **Module Selection Reminder**:
+  - Added blue alert box at top of Step 4: "¡No olvides seleccionar módulos!"
+  - Guides users to explore categories and add components
+  - Styled with `bg-primary/5 border-primary/20` for subtle emphasis
+- **Admin Panel Enhancements**:
+  - Added "Categoría" and "Tipo" columns to modules table
+  - Inline editing via `<select>` dropdowns with immediate save on change
+  - All 8 categories available in both table and "Add Module" dialog
+  - Category and product type now editable after module creation
+- **Edge Case Handling**:
+  - When no modules available (all have price = 0), shows helpful Alert message
+  - Message explains what's missing and guides user to continue or contact admin
+  - Ensures Step 4 always actionable even with empty module list
+- **End-to-end testing**: ✅ Passed (19/19 steps)
+  - Dynamic tabs render correctly
+  - Admin inline editing works
+  - Reminder alert displays
+  - Empty state fallback works
+- **Architect review**: ✅ Approved (including fallback fix for empty categories)
