@@ -16,22 +16,22 @@ const PLAYGROUND_MULTIPLIERS: Record<number, number> = {
 };
 
 /**
- * Multipliers for HOUSE module pricing based on house size (heightCm)
- * Base pricing in database is for 2m x 2m houses (200cm)
- * 
- * - 150cm (1.5x1.5m): 0.75x multiplier (smaller house)
- * - 200cm (2x2m): 1.0x multiplier (base price)
- * - 250cm (2.5x2.5m): 1.25x multiplier (larger house)
- * - 300cm (3x3m): 1.5x multiplier (largest house)
+ * Base area for HOUSE module pricing (2m x 2m = 4 mt2)
+ * Module prices in database are per mt2 based on this reference area
  */
-const HOUSE_MULTIPLIERS: Record<number, number> = {
-  150: 0.75,  // 1.5x1.5m
-  200: 1.0,   // 2x2m (BASE)
-  250: 1.25,  // 2.5x2.5m
-  300: 1.5,   // 3x3m
-};
+const HOUSE_BASE_AREA_M2 = 4.0; // 2m x 2m
 
 const DEFAULT_MULTIPLIER = 1.0;
+
+/**
+ * Calculate the area in square meters for a house platform
+ * @param heightCm The height dimension in centimeters (represents one side of the square house)
+ * @returns The area in square meters
+ */
+function calculateHouseAreaM2(heightCm: number): number {
+  const sizeM = heightCm / 100; // Convert cm to meters
+  return sizeM * sizeM; // Area = side × side for square houses
+}
 
 /**
  * Get the pricing multiplier for a given platform
@@ -41,11 +41,14 @@ const DEFAULT_MULTIPLIER = 1.0;
 export function getPlatformMultiplier(platform?: Platform | null): number {
   if (!platform) return DEFAULT_MULTIPLIER;
   
-  // Use different multiplier tables based on platform category
-  const multipliers = platform.category === "house" 
-    ? HOUSE_MULTIPLIERS 
-    : PLAYGROUND_MULTIPLIERS;
+  // For houses: calculate multiplier based on actual area in mt2
+  if (platform.category === "house") {
+    const areaM2 = calculateHouseAreaM2(platform.heightCm);
+    return areaM2 / HOUSE_BASE_AREA_M2;
+  }
   
+  // For playgrounds: use fixed multipliers based on height
+  const multipliers = PLAYGROUND_MULTIPLIERS;
   return multipliers[platform.heightCm] ?? DEFAULT_MULTIPLIER;
 }
 

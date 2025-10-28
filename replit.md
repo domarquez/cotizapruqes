@@ -43,10 +43,19 @@ Preferred communication style: Simple, everyday language.
 - **Future Requirement**: Implement robust authentication with session management (connect-pg-simple), password hashing, and role-based access control.
 
 ### Pricing Logic
-- **Dynamic Module Pricing**: Modules have base prices (1m x 1m for playgrounds, 2m x 2m for houses) that are dynamically adjusted based on the selected platform's size using predefined multipliers.
-    - **Playground Multipliers**: 0.8x for 80cm, 1.0x for 100cm, 1.2x for 120cm/150cm.
-    - **House Multipliers**: 0.75x for 1.5x1.5m, 1.0x for 2x2m, 1.25x for 2.5x2.5m, 1.5x for 3x3m.
-- The system automatically calculates adjusted prices; admins only manage base prices.
+- **Dynamic Module Pricing**: Modules have base prices that are dynamically adjusted based on the selected platform's size.
+    - **Playgrounds**: Base price is for 1m x 1m platforms (100cm). Fixed multipliers:
+        - 80cm: 0.8x
+        - 100cm: 1.0x (base)
+        - 120cm/150cm: 1.2x
+    - **Casitas (Houses)**: Base price is for 2m x 2m houses (4 mt2). Prices calculated by **actual area**:
+        - Formula: `precio_modulo = precio_base × (área_casa / 4)`
+        - Examples:
+            - 1.5x1.5m (2.25 mt2): 2.25/4 = 0.5625x
+            - 2x2m (4 mt2): 4/4 = 1.0x (base)
+            - 2.5x2.5m (6.25 mt2): 6.25/4 = 1.5625x
+            - 3x3m (9 mt2): 9/4 = 2.25x
+- The system automatically calculates adjusted prices; admins only manage base prices per mt2.
 
 ### Image Management
 - **Storage**: Local filesystem storage (`public/uploads/`) for product and content images, compatible with Railway deployment.
@@ -127,3 +136,14 @@ Preferred communication style: Simple, everyday language.
 - Added multer error handler middleware to return 400 status codes for validation errors (file size/type)
 - End-to-end testing: ✅ Passed (admin panel loads, all tabs functional, no console errors)
 - Architect review: ✅ Approved (functions as intended, Railway compatible, security recommendations noted)
+
+**October 28, 2025 - House Module Pricing by Actual Area:**
+- Updated module pricing logic for houses (casitas) to calculate by actual area in mt2 instead of fixed multipliers
+- Implemented area-based calculation: `module_price = base_price × (house_area / 4)`
+- Base area reference: 2x2m = 4 mt2
+- Examples: 1.5x1.5m (2.25 mt2) = 0.5625x, 2x2m (4 mt2) = 1.0x, 3x3m (9 mt2) = 2.25x
+- Playground pricing unchanged (still uses fixed multipliers based on height)
+- Modified `getPlatformMultiplier()` function in `shared/pricing.ts` to branch by platform category
+- Added `calculateHouseAreaM2()` helper function for area calculation
+- End-to-end testing: ✅ Passed (verified correct pricing for 1.5x1.5m, 2x2m, and 3x3m houses)
+- Architect review: ✅ Approved (mathematically correct, no regressions on playground pricing)
