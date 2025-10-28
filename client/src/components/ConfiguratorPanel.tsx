@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Info, ChevronDown, Check, Home, Building2, ClipboardList } from "lucide-react";
 import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
@@ -490,17 +491,22 @@ export default function ConfiguratorPanel() {
                     
                     return (
                       <Tabs defaultValue={firstCategory} className="w-full">
-                        <TabsList className={`relative z-10 grid w-full grid-cols-${Math.min(availableCategories.length, 4)} bg-card`}>
-                          {availableCategories.map(([key, label]) => (
-                            <TabsTrigger 
-                              key={key} 
-                              value={key} 
-                              data-testid={`tab-${key}`}
-                            >
-                              {label}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
+                        {/* Scroll horizontal para categorías */}
+                        <ScrollArea className="w-full whitespace-nowrap">
+                          <TabsList className="inline-flex h-auto p-1 bg-muted">
+                            {availableCategories.map(([key, label]) => (
+                              <TabsTrigger 
+                                key={key} 
+                                value={key} 
+                                data-testid={`tab-${key}`}
+                                className="px-4 py-2 data-[state=active]:bg-background"
+                              >
+                                {label}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                          <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
 
                         {/* Aviso de recordatorio */}
                         <Alert className="mt-6 mb-4 bg-primary/5 border-primary/20">
