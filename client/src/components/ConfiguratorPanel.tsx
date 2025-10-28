@@ -169,27 +169,30 @@ export default function ConfiguratorPanel() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Filter modules by category and availability
-  const modulesByCategory = useType ? {
-    techos: modules.filter(m => {
-      const price = useType === "domestic" 
-        ? parseFloat(m.priceDomestic) 
-        : parseFloat(m.pricePublic);
-      return m.category === "techos" && price > 0;
-    }),
-    resbalines: modules.filter(m => {
-      const price = useType === "domestic" 
-        ? parseFloat(m.priceDomestic) 
-        : parseFloat(m.pricePublic);
-      return m.category === "resbalines" && price > 0;
-    }),
-    accesorios: modules.filter(m => {
-      const price = useType === "domestic" 
-        ? parseFloat(m.priceDomestic) 
-        : parseFloat(m.pricePublic);
-      return m.category === "accesorios" && price > 0;
-    }),
-  } : { techos: [], resbalines: [], accesorios: [] };
+  // Categorías de módulos disponibles (ampliadas)
+  const MODULE_CATEGORIES = {
+    techos: "Techos",
+    resbalines: "Resbalines", 
+    columpios: "Columpios",
+    trepadoras: "Trepadoras",
+    barandas: "Barandas",
+    sube_y_baja: "Sube y Baja",
+    calistenia: "Calistenia",
+    accesorios: "Accesorios",
+  };
+
+  // Filter modules by category and availability (dinámico)
+  const modulesByCategory = useType ? 
+    Object.keys(MODULE_CATEGORIES).reduce((acc, categoryKey) => {
+      acc[categoryKey] = modules.filter(m => {
+        const price = useType === "domestic" 
+          ? parseFloat(m.priceDomestic) 
+          : parseFloat(m.pricePublic);
+        return m.category === categoryKey && price > 0;
+      });
+      return acc;
+    }, {} as Record<string, typeof modules>) 
+    : {};
 
   if (loadingPlatforms || loadingModules) {
     return (
@@ -460,98 +463,80 @@ export default function ConfiguratorPanel() {
                     <div>
                       <CardTitle>Paso 4: Agrega Módulos (Opcional)</CardTitle>
                       <CardDescription>
-                        Personaliza con techos, resbalines y accesorios
+                        Personaliza tu {productType === "playground" ? "parque" : "casa"} con módulos adicionales
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="techos" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="techos" data-testid="tab-roofs">Techos</TabsTrigger>
-                      <TabsTrigger value="resbalines" data-testid="tab-slides">Resbalines</TabsTrigger>
-                      <TabsTrigger value="accesorios" data-testid="tab-accessories">Accesorios</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="techos" className="mt-6">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {modulesByCategory.techos.map((module) => {
-                          const material = useType === "domestic" ? module.material : module.materialPublic;
-                          const currentPlatform = platforms.find(p => p.id === selectedPlatform);
-                          const price = getAdjustedModulePrice(module, currentPlatform, useType!);
-                          return (
-                            <ModuleCard
-                              key={module.id}
-                              id={module.id}
-                              name={module.name}
-                              material={material}
-                              price={price}
-                              isSelected={selectedModules.has(module.id)}
-                              onToggle={() => toggleModule(module.id)}
-                              useType={useType!}
-                              imageUrl={module.imageUrl}
-                            />
-                          );
-                        })}
-                      </div>
-                      {modulesByCategory.techos.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">No hay techos disponibles</p>
-                      )}
-                    </TabsContent>
-                    <TabsContent value="resbalines" className="mt-6">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {modulesByCategory.resbalines.map((module) => {
-                          const material = useType === "domestic" ? module.material : module.materialPublic;
-                          const currentPlatform = platforms.find(p => p.id === selectedPlatform);
-                          const price = getAdjustedModulePrice(module, currentPlatform, useType!);
-                          return (
-                            <ModuleCard
-                              key={module.id}
-                              id={module.id}
-                              name={module.name}
-                              material={material}
-                              price={price}
-                              isSelected={selectedModules.has(module.id)}
-                              onToggle={() => toggleModule(module.id)}
-                              useType={useType!}
-                              imageUrl={module.imageUrl}
-                            />
-                          );
-                        })}
-                      </div>
-                      {modulesByCategory.resbalines.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">No hay resbalines disponibles</p>
-                      )}
-                    </TabsContent>
-                    <TabsContent value="accesorios" className="mt-6">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {modulesByCategory.accesorios.map((module) => {
-                          const material = useType === "domestic" ? module.material : module.materialPublic;
-                          const currentPlatform = platforms.find(p => p.id === selectedPlatform);
-                          const price = getAdjustedModulePrice(module, currentPlatform, useType!);
-                          return (
-                            <ModuleCard
-                              key={module.id}
-                              id={module.id}
-                              name={module.name}
-                              material={material}
-                              price={price}
-                              isSelected={selectedModules.has(module.id)}
-                              onToggle={() => toggleModule(module.id)}
-                              useType={useType!}
-                              imageUrl={module.imageUrl}
-                            />
-                          );
-                        })}
-                      </div>
-                      {modulesByCategory.accesorios.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">No hay accesorios disponibles</p>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+                  {/* Aviso de recordatorio */}
+                  <Alert className="mb-6 bg-primary/5 border-primary/20">
+                    <Info className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-sm">
+                      <strong>¡No olvides seleccionar módulos!</strong> Explora las categorías abajo para agregar componentes a tu configuración.
+                    </AlertDescription>
+                  </Alert>
+
+                  {(() => {
+                    // Solo mostrar categorías que tienen módulos
+                    const availableCategories = Object.entries(MODULE_CATEGORIES)
+                      .filter(([key]) => modulesByCategory[key]?.length > 0);
+                    
+                    if (availableCategories.length === 0) {
+                      return (
+                        <p className="text-center text-muted-foreground py-8">
+                          No hay módulos disponibles para este tipo de producto
+                        </p>
+                      );
+                    }
+
+                    const firstCategory = availableCategories[0][0];
+                    
+                    return (
+                      <Tabs defaultValue={firstCategory} className="w-full">
+                        <TabsList className={`grid w-full grid-cols-${Math.min(availableCategories.length, 4)}`}>
+                          {availableCategories.map(([key, label]) => (
+                            <TabsTrigger 
+                              key={key} 
+                              value={key} 
+                              data-testid={`tab-${key}`}
+                            >
+                              {label}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                        
+                        {availableCategories.map(([categoryKey]) => (
+                          <TabsContent key={categoryKey} value={categoryKey} className="mt-6">
+                            <div className="grid md:grid-cols-2 gap-4">
+                              {modulesByCategory[categoryKey].map((module) => {
+                                const material = useType === "domestic" ? module.material : module.materialPublic;
+                                const currentPlatform = platforms.find(p => p.id === selectedPlatform);
+                                const price = getAdjustedModulePrice(module, currentPlatform, useType!);
+                                return (
+                                  <ModuleCard
+                                    key={module.id}
+                                    id={module.id}
+                                    name={module.name}
+                                    material={material}
+                                    price={price}
+                                    isSelected={selectedModules.has(module.id)}
+                                    onToggle={() => toggleModule(module.id)}
+                                    useType={useType!}
+                                    imageUrl={module.imageUrl}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    );
+                  })()}
                   
                   <Alert className="mt-6">
                     <Info className="h-4 w-4" />
-                    <AlertDescription>
+                    <AlertDescription className="text-sm">
                       <strong>¿Ya terminaste?</strong> Revisa tu resumen en el panel de la derecha y solicita tu cotización
                     </AlertDescription>
                   </Alert>

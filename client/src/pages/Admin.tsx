@@ -634,8 +634,10 @@ export default function Admin() {
                     <TableRow>
                       <TableHead>Imagen</TableHead>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Material Doméstico</TableHead>
-                      <TableHead>Material Público</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Material Dom.</TableHead>
+                      <TableHead>Material Púb.</TableHead>
                       <TableHead>Precio Dom.</TableHead>
                       <TableHead>Precio Púb.</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
@@ -682,6 +684,34 @@ export default function Admin() {
                             onSave={(value) => updateModuleField(module.id, "name", value)}
                             testId={`module-${module.id}-name`}
                           />
+                        </TableCell>
+                        <TableCell>
+                          <select
+                            value={module.category}
+                            onChange={(e) => updateModuleField(module.id, "category", e.target.value)}
+                            className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors hover-elevate focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            data-testid={`select-module-${module.id}-category`}
+                          >
+                            <option value="techos">Techos</option>
+                            <option value="resbalines">Resbalines</option>
+                            <option value="columpios">Columpios</option>
+                            <option value="trepadoras">Trepadoras</option>
+                            <option value="barandas">Barandas</option>
+                            <option value="sube_y_baja">Sube y Baja</option>
+                            <option value="calistenia">Calistenia</option>
+                            <option value="accesorios">Accesorios</option>
+                          </select>
+                        </TableCell>
+                        <TableCell>
+                          <select
+                            value={module.productType}
+                            onChange={(e) => updateModuleField(module.id, "productType", e.target.value)}
+                            className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors hover-elevate focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            data-testid={`select-module-${module.id}-type`}
+                          >
+                            <option value="playground">Parque</option>
+                            <option value="house">Casa</option>
+                          </select>
                         </TableCell>
                         <TableCell>
                           <InlineEditInput
@@ -1115,6 +1145,11 @@ export default function Admin() {
                   <option value="">Seleccionar...</option>
                   <option value="techos">Techos</option>
                   <option value="resbalines">Resbalines</option>
+                  <option value="columpios">Columpios</option>
+                  <option value="trepadoras">Trepadoras</option>
+                  <option value="barandas">Barandas</option>
+                  <option value="sube_y_baja">Sube y Baja</option>
+                  <option value="calistenia">Calistenia</option>
                   <option value="accesorios">Accesorios</option>
                 </select>
               </div>
