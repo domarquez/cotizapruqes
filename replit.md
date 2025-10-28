@@ -59,10 +59,14 @@ Preferred communication style: Simple, everyday language.
 - The system automatically calculates adjusted prices; admins only manage base prices per mt2 (1x1m base).
 
 ### Image Management
-- **Storage**: Local filesystem storage (`public/uploads/`) for product and content images, compatible with Railway deployment.
-- **Upload**: Custom `ObjectUploader` component (native file input) uploads images via FormData to `/api/upload-image` endpoint using multer middleware.
-- **Serving**: Express static middleware serves images from `/uploads/` path.
-- **Display**: Images are displayed with consistent sizing and aspect ratios across the application.
+- **Storage**: PostgreSQL (Neon) database storage using bytea type for binary image data. Solves Railway's ephemeral filesystem persistence problem.
+- **Upload**: Custom `ObjectUploader` component uploads images via FormData to `/api/upload-image` endpoint using multer (memoryStorage).
+- **Serving**: Images served from `/api/product-images/:id` endpoint with proper cache headers.
+- **Limits**: Maximum 1MB per image, 100 images total (enforced at upload).
+- **Database Table**: `product_images` stores filename, mimeType, byteLength, and binary data (bytea).
+- **Caching**: Response headers include Cache-Control (public, max-age=86400) and Content-Type matching uploaded MIME type.
+- **Display**: Images displayed with consistent sizing and aspect ratios across the application.
+- **Legacy Format**: Old `/uploads/{filename}` URLs from filesystem storage are deprecated (images lost on Railway redeploys).
 
 ## External Dependencies
 
@@ -147,3 +151,36 @@ Preferred communication style: Simple, everyday language.
 - Playground pricing unchanged (still uses fixed multipliers based on height)
 - Modified `getPlatformMultiplier()` function in `shared/pricing.ts` to branch by platform category
 - Added `calculateHouseAreaM2()` helper function for area calculation
+
+**October 28, 2025 - Migration to Neon PostgreSQL Image Storage:**
+- **Migration**: Moved from local filesystem (`public/uploads/`) to PostgreSQL (Neon) database storage for images
+- **Reason**: Railway's ephemeral filesystem deletes images on every redeploy; database storage ensures persistence
+- **Implementation**:
+  - Created `product_images` table with custom bytea type (Drizzle ORM customType for binary data)
+  - Fields: id (UUID), filename, mimeType, byteLength, data (bytea), createdAt
+  - Changed multer from diskStorage to memoryStorage (files buffered in RAM before DB insert)
+  - Updated `/api/upload-image` endpoint to save images to database
+  - Created GET `/api/product-images/:id` endpoint to serve images with streaming and cache headers
+  - Storage interface: Added getProductImage, createProductImage, deleteProductImage, getProductImagesCount methods
+- **Limits & Safeguards**:
+  - Per-image limit: 1MB maximum (down from previous 10MB to optimize DB size)
+  - Total limit: 100 images maximum (prevents database bloat, ~50MB total estimated)
+  - Validation: MIME type check (image/* only), file size enforcement
+- **Cache Strategy**:
+  - Cache-Control: `public, max-age=86400` (1 day browser cache)
+  - Content-Type header matches uploaded image MIME type
+  - Content-Length header set for proper client handling
+- **Image URL Format**:
+  - New format: `/api/product-images/{uuid}` (database-backed)
+  - Old format: `/uploads/{filename}` (deprecated, filesystem-backed - images lost)
+- **Database Schema Change**: Applied via `npm run db:push` successfully
+- **End-to-end testing**: ✅ Passed
+  - Images upload to database correctly
+  - Images serve from `/api/product-images/:id` with proper headers
+  - Configurator displays images correctly
+  - Cache headers working as expected
+- **Architect review**: ✅ Approved
+  - Implementation correct and efficient
+  - Safeguards appropriate for scale (<100 images, <1MB each)
+  - Suggested improvements (optional): ETag/Last-Modified headers, migration script for legacy URLs
+- **Known Issue**: Old platform/module records with `/uploads/*` URLs will show broken images (expected - filesystem images don't persist across Railway redeploys)
