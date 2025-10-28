@@ -225,7 +225,7 @@ export default function ConfiguratorPanel() {
         <div className="space-y-6">
           {/* PASO 1: Tipo de Uso */}
           <Card data-testid="card-step-1" className="relative">
-            <CardHeader>
+            <CardHeader className="px-4 sm:px-6">
               <div className="flex items-center gap-3">
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold text-lg ${
                   step1Complete 
@@ -234,7 +234,7 @@ export default function ConfiguratorPanel() {
                 }`}>
                   {step1Complete ? <Check className="h-5 w-5" /> : "1"}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <CardTitle>Paso 1: Selecciona el Tipo de Uso</CardTitle>
                   <CardDescription>
                     ¿Es para uso privado o público?
@@ -242,7 +242,7 @@ export default function ConfiguratorPanel() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <Card className={`cursor-pointer transition-all min-w-0 ${useType === "domestic" ? "ring-2 ring-primary" : ""}`}
                   onClick={() => setUseType("domestic")}>
@@ -312,7 +312,7 @@ export default function ConfiguratorPanel() {
           {step1Complete && (
             <div ref={step2Ref}>
               <Card data-testid="card-step-2" className="relative">
-                <CardHeader>
+                <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-3">
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold text-lg ${
                       step2Complete 
@@ -321,7 +321,7 @@ export default function ConfiguratorPanel() {
                     }`}>
                       {step2Complete ? <Check className="h-5 w-5" /> : "2"}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <CardTitle>Paso 2: Elige el Tipo de Producto</CardTitle>
                       <CardDescription>
                         ¿Qué deseas configurar?
@@ -329,7 +329,7 @@ export default function ConfiguratorPanel() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <Button
                       variant={productType === "playground" ? "default" : "outline"}
@@ -377,7 +377,7 @@ export default function ConfiguratorPanel() {
           {step2Complete && (
             <div ref={step3Ref}>
               <Card data-testid="card-platform-selection" className="relative">
-                <CardHeader>
+                <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-3">
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold text-lg ${
                       step3Complete 
@@ -386,7 +386,7 @@ export default function ConfiguratorPanel() {
                     }`}>
                       {step3Complete ? <Check className="h-5 w-5" /> : "3"}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <CardTitle>
                         Paso 3: Selecciona {productType === "playground" ? "la Plataforma Base" : "el Tamaño de la Casa"}
                       </CardTitle>
@@ -396,7 +396,7 @@ export default function ConfiguratorPanel() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {displayItems.map((item: any) => {
                       const price = useType === "domestic" 
@@ -456,12 +456,12 @@ export default function ConfiguratorPanel() {
           {step3Complete && (
             <div ref={step4Ref}>
               <Card data-testid="card-modules-selection">
-                <CardHeader>
+                <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary font-bold text-lg">
                       4
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <CardTitle>Paso 4: Agrega Módulos (Opcional)</CardTitle>
                       <CardDescription>
                         Personaliza tu {productType === "playground" ? "parque" : "casa"} con módulos adicionales
@@ -469,7 +469,7 @@ export default function ConfiguratorPanel() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   {(() => {
                     // Solo mostrar categorías que tienen módulos
                     const availableCategories = Object.entries(MODULE_CATEGORIES)
