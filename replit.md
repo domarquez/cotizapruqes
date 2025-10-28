@@ -53,6 +53,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 28, 2025 - Fixed Mobile Horizontal Overflow in All Configurator Steps:**
+- **Problem**: Page overflowed horizontally by ~110px on mobile when Step 4 appeared after selecting platform in Step 3
+- **Root Cause**: CardHeader and CardContent had default `p-6` (24px padding) which accumulated across nested cards, causing content width to exceed 375px mobile viewport
+- **Solution**: Applied responsive horizontal padding to all configurator step Cards
+  - Mobile (< 640px): `px-4` (16px horizontal padding)
+  - Tablet+ (>= 640px): `px-6` (24px horizontal padding, original)
+  - Added `min-w-0` to title containers for proper text wrapping
+- **Changes Applied**: All 4 steps (Tipo de Uso, Tipo de Producto, Plataforma, Módulos) updated with responsive padding
+- **Verification**: E2E test confirmed scrollWidth === clientWidth on mobile (375x667) across all steps
+- **Architect review**: ✅ Approved - no regressions, improved mobile usability
+
 **October 28, 2025 - Redesigned Category Selection with Horizontal Scroll:**
 - **Problem**: Category tabs (techos, resbalines, columpios, etc.) overlapped with alert messages and module cards on both desktop and mobile
 - **Root Cause**: Dynamic Tailwind grid classes (`grid-cols-${...}`) don't work at compile time; attempted to fit 8 categories causing layout collapse and z-index conflicts
