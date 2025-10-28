@@ -53,6 +53,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 28, 2025 - Fixed Mobile Responsiveness in Configurator:**
+- **Problem**: Horizontal overflow when selecting uso type on mobile viewports (<640px); Step 2 buttons exceeded viewport width
+- **Root Cause**: Step 2 product-type buttons in horizontal flex layout (~478px combined width) overflowed 360px mobile viewport
+- **Solution**: Changed Step 2 button container to responsive vertical stacking
+  - Mobile (< 640px): Buttons stack vertically with `flex-col` 
+  - Tablet+ (>= 640px): Buttons side-by-side with `flex-row`
+- **Additional Fixes**: Added `min-w-0` to Step 1 cards, `flex-wrap` to CardTitle, `shrink-0` to text/badge elements
+- **Verification**: E2E test confirmed no horizontal overflow (scrollWidth === clientWidth) at all steps
+- **Architect review**: ✅ Approved - no accessibility, behavior, or maintainability concerns
+
 **October 28, 2025 - Expanded Module Categories & Admin Editing:**
 - **Problem**: Only 3 hardcoded module categories (techos, resbalines, accesorios) were available; categories couldn't be edited after module creation
 - **Solution**: Expanded to 8 categories with dynamic tab rendering and inline editing in admin panel
