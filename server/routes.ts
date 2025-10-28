@@ -7,21 +7,10 @@ import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
 
-// Configure multer for local file uploads
-const uploadStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${randomUUID()}${ext}`;
-    cb(null, filename);
-  }
-});
-
+// Configure multer to store files in memory for DB storage
 const upload = multer({
-  storage: uploadStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1 * 1024 * 1024 }, // 1MB limit (for DB storage)
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -32,18 +21,54 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // IMAGE UPLOAD - Local storage
+  // IMAGE UPLOAD - Database storage
   app.post("/api/upload-image", upload.single('image'), async (req, res, next) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
+
+      // Check total images count (limit to 100 images)
+      const count = await storage.getProductImagesCount();
+      if (count >= 100) {
+        return res.status(400).json({ error: "Image limit reached (100 images max)" });
+      }
       
-      // Return the path to the uploaded image
-      const imageUrl = `/uploads/${req.file.filename}`;
+      // Save to database
+      const productImage = await storage.createProductImage({
+        filename: req.file.originalname,
+        mimeType: req.file.mimetype,
+        byteLength: req.file.size,
+        data: req.file.buffer,
+      });
+      
+      // Return the API URL to access the image
+      const imageUrl = `/api/product-images/${productImage.id}`;
       res.json({ imageUrl });
     } catch (error) {
       next(error);
+    }
+  });
+
+  // Serve product images from database
+  app.get("/api/product-images/:id", async (req, res) => {
+    try {
+      const image = await storage.getProductImage(req.params.id);
+      
+      if (!image) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+
+      // Set cache headers (1 day)
+      res.setHeader('Content-Type', image.mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Length', image.byteLength.toString());
+      
+      // Send the binary data
+      res.send(image.data);
+    } catch (error) {
+      console.error("Error serving image:", error);
+      res.status(500).json({ error: "Failed to serve image" });
     }
   });
 
@@ -51,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((error: any, req: any, res: any, next: any) => {
     if (error instanceof multer.MulterError) {
       if (error.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'File size exceeds 10MB limit' });
+        return res.status(400).json({ error: 'File size exceeds 1MB limit' });
       }
       return res.status(400).json({ error: error.message });
     } else if (error && error.message === 'Only image files are allowed') {

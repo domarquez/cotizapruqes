@@ -1,7 +1,7 @@
-import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type HeroCarouselImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage, type InsertHeroCarouselImage } from "@shared/schema";
-import { platforms, modules, quotes, siteContent, galleryImages, heroCarouselImages } from "@shared/schema";
+import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type HeroCarouselImage, type ProductImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage, type InsertHeroCarouselImage, type InsertProductImage } from "@shared/schema";
+import { platforms, modules, quotes, siteContent, galleryImages, heroCarouselImages, productImages } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Platforms
@@ -41,6 +41,12 @@ export interface IStorage {
   createHeroCarouselImage(image: InsertHeroCarouselImage): Promise<HeroCarouselImage>;
   updateHeroCarouselImage(id: string, image: Partial<InsertHeroCarouselImage>): Promise<HeroCarouselImage>;
   deleteHeroCarouselImage(id: string): Promise<void>;
+  
+  // Product Images
+  getProductImage(id: string): Promise<ProductImage | undefined>;
+  createProductImage(image: InsertProductImage): Promise<ProductImage>;
+  deleteProductImage(id: string): Promise<void>;
+  getProductImagesCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -218,6 +224,29 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHeroCarouselImage(id: string): Promise<void> {
     await db.delete(heroCarouselImages).where(eq(heroCarouselImages.id, id));
+  }
+
+  // Product Images
+  async getProductImage(id: string): Promise<ProductImage | undefined> {
+    const [image] = await db.select().from(productImages).where(eq(productImages.id, id));
+    return image || undefined;
+  }
+
+  async createProductImage(insertImage: InsertProductImage): Promise<ProductImage> {
+    const [image] = await db
+      .insert(productImages)
+      .values(insertImage)
+      .returning();
+    return image;
+  }
+
+  async deleteProductImage(id: string): Promise<void> {
+    await db.delete(productImages).where(eq(productImages.id, id));
+  }
+
+  async getProductImagesCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(productImages);
+    return result?.count || 0;
   }
 }
 
