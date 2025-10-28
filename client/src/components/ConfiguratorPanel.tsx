@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ChevronDown, Check } from "lucide-react";
+import { Info, ChevronDown, Check, Home, Building2, ClipboardList } from "lucide-react";
 import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
 import { Button } from "@/components/ui/button";
@@ -338,7 +338,8 @@ export default function ConfiguratorPanel() {
                       className="flex-1 h-20 text-lg"
                       data-testid="button-type-playground"
                     >
-                      🎪 Parque Infantil
+                      <Building2 className="h-6 w-6 mr-2" />
+                      Parque Infantil
                     </Button>
                     <Button
                       variant={productType === "house" ? "default" : "outline"}
@@ -351,7 +352,8 @@ export default function ConfiguratorPanel() {
                       className="flex-1 h-20 text-lg"
                       data-testid="button-type-house"
                     >
-                      🏠 Casa de Madera
+                      <Home className="h-6 w-6 mr-2" />
+                      Casa de Madera
                     </Button>
                   </div>
                 </CardContent>
@@ -593,7 +595,7 @@ export default function ConfiguratorPanel() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 text-center py-8 text-muted-foreground">
-                  <div className="text-6xl">📋</div>
+                  <ClipboardList className="h-16 w-16 mx-auto opacity-50" />
                   <p className="text-sm">
                     Tu resumen aparecerá aquí cuando selecciones una {productType === "playground" ? "plataforma" : "casa"}
                   </p>
