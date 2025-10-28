@@ -53,6 +53,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 28, 2025 - Redesigned Category Selection with Horizontal Scroll:**
+- **Problem**: Category tabs (techos, resbalines, columpios, etc.) overlapped with alert messages and module cards on both desktop and mobile
+- **Root Cause**: Dynamic Tailwind grid classes (`grid-cols-${...}`) don't work at compile time; attempted to fit 8 categories causing layout collapse and z-index conflicts
+- **Solution**: Replaced grid layout with horizontal ScrollArea
+  - TabsList now uses `inline-flex` with horizontal scroll
+  - All 8 categories accessible via smooth horizontal scrolling
+  - Added horizontal ScrollBar for visibility on mobile
+  - Removed problematic `relative z-10` that caused overlap
+- **Benefits**: Clean predictable layout, no overlap with content below, works on all viewports
+- **Verification**: E2E tests passed on desktop (1920x1080) and mobile (375x667)
+- **Architect review**: ✅ Approved - recommends monitoring user feedback for scroll discoverability
+
 **October 28, 2025 - Fixed Mobile Responsiveness in Configurator:**
 - **Problem**: Horizontal overflow when selecting uso type on mobile viewports (<640px); Step 2 buttons exceeded viewport width
 - **Root Cause**: Step 2 product-type buttons in horizontal flex layout (~478px combined width) overflowed 360px mobile viewport
@@ -80,7 +92,8 @@ Preferred communication style: Simple, everyday language.
   - Configurator dynamically renders tabs only for categories with modules (price > 0)
   - Empty categories automatically hidden from UI
   - First available category auto-selected as default
-  - Tabs use natural scroll behavior (relative positioning with z-10) for clean, predictable layout
+  - Tabs use horizontal ScrollArea for smooth scrolling across all 8 categories
+  - No z-index conflicts or content overlap
   - Proper spacing (mt-6) ensures tabs never overlap with module content
 - **Module Selection Reminder**:
   - Alert box placed after category tabs in Step 4: "¡No olvides seleccionar módulos!"
