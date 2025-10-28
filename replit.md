@@ -73,9 +73,10 @@ Preferred communication style: Simple, everyday language.
   - Tabs use natural scroll behavior (relative positioning with z-10) for clean, predictable layout
   - Proper spacing (mt-6) ensures tabs never overlap with module content
 - **Module Selection Reminder**:
-  - Added blue alert box at top of Step 4: "¡No olvides seleccionar módulos!"
-  - Guides users to explore categories and add components
+  - Alert box placed after category tabs in Step 4: "¡No olvides seleccionar módulos!"
+  - Guides users to explore categories above and add components
   - Styled with `bg-primary/5 border-primary/20` for subtle emphasis
+  - Layout order: Category tabs → Reminder alert → Module cards
 - **Admin Panel Enhancements**:
   - Added "Categoría" and "Tipo" columns to modules table
   - Inline editing via `<select>` dropdowns with immediate save on change

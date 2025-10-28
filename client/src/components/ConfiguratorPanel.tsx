@@ -469,14 +469,6 @@ export default function ConfiguratorPanel() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Aviso de recordatorio */}
-                  <Alert className="mb-6 bg-primary/5 border-primary/20">
-                    <Info className="h-4 w-4 text-primary" />
-                    <AlertDescription className="text-sm">
-                      <strong>¡No olvides seleccionar módulos!</strong> Explora las categorías abajo para agregar componentes a tu configuración.
-                    </AlertDescription>
-                  </Alert>
-
                   {(() => {
                     // Solo mostrar categorías que tienen módulos
                     const availableCategories = Object.entries(MODULE_CATEGORIES)
@@ -509,9 +501,17 @@ export default function ConfiguratorPanel() {
                             </TabsTrigger>
                           ))}
                         </TabsList>
+
+                        {/* Aviso de recordatorio */}
+                        <Alert className="mt-6 mb-4 bg-primary/5 border-primary/20">
+                          <Info className="h-4 w-4 text-primary" />
+                          <AlertDescription className="text-sm">
+                            <strong>¡No olvides seleccionar módulos!</strong> Explora las categorías arriba para agregar componentes a tu configuración.
+                          </AlertDescription>
+                        </Alert>
                         
                         {availableCategories.map(([categoryKey]) => (
-                          <TabsContent key={categoryKey} value={categoryKey} className="mt-6">
+                          <TabsContent key={categoryKey} value={categoryKey} className="mt-0">
                             <div className="grid md:grid-cols-2 gap-4">
                               {modulesByCategory[categoryKey].map((module) => {
                                 const material = useType === "domestic" ? module.material : module.materialPublic;
