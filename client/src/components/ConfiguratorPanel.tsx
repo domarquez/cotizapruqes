@@ -492,19 +492,21 @@ export default function ConfiguratorPanel() {
                     return (
                       <Tabs defaultValue={firstCategory} className="w-full">
                         {/* Scroll horizontal para categorías */}
-                        <ScrollArea className="w-full whitespace-nowrap">
-                          <TabsList className="inline-flex h-auto p-1 bg-muted">
-                            {availableCategories.map(([key, label]) => (
-                              <TabsTrigger 
-                                key={key} 
-                                value={key} 
-                                data-testid={`tab-${key}`}
-                                className="px-4 py-2 data-[state=active]:bg-background"
-                              >
-                                {label}
-                              </TabsTrigger>
-                            ))}
-                          </TabsList>
+                        <ScrollArea className="w-full">
+                          <div className="w-full">
+                            <TabsList className="inline-flex h-auto p-1 bg-muted w-max">
+                              {availableCategories.map(([key, label]) => (
+                                <TabsTrigger 
+                                  key={key} 
+                                  value={key} 
+                                  data-testid={`tab-${key}`}
+                                  className="px-4 py-2 data-[state=active]:bg-background whitespace-nowrap"
+                                >
+                                  {label}
+                                </TabsTrigger>
+                              ))}
+                            </TabsList>
+                          </div>
                           <ScrollBar orientation="horizontal" />
                         </ScrollArea>
 
