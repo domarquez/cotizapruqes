@@ -484,9 +484,13 @@ export default function ConfiguratorPanel() {
                     
                     if (availableCategories.length === 0) {
                       return (
-                        <p className="text-center text-muted-foreground py-8">
-                          No hay módulos disponibles para este tipo de producto
-                        </p>
+                        <Alert>
+                          <Info className="h-4 w-4" />
+                          <AlertDescription className="text-sm">
+                            No hay módulos disponibles para {productType === "playground" ? "parques infantiles" : "casitas"} con uso {useType === "domestic" ? "doméstico" : "público"}.
+                            {" "}Puedes continuar con tu cotización o contactar al administrador para agregar módulos.
+                          </AlertDescription>
+                        </Alert>
                       );
                     }
 
