@@ -70,8 +70,8 @@ Preferred communication style: Simple, everyday language.
   - Configurator dynamically renders tabs only for categories with modules (price > 0)
   - Empty categories automatically hidden from UI
   - First available category auto-selected as default
-  - Tabs have sticky positioning (`sticky top-0 z-10`) to remain visible when scrolling
-  - Solid background (`bg-card`) ensures tabs are never obscured by module content
+  - Tabs use natural scroll behavior (relative positioning with z-10) for clean, predictable layout
+  - Proper spacing (mt-6) ensures tabs never overlap with module content
 - **Module Selection Reminder**:
   - Added blue alert box at top of Step 4: "¡No olvides seleccionar módulos!"
   - Guides users to explore categories and add components
