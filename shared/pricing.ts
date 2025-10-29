@@ -64,11 +64,34 @@ export function getAdjustedModulePrice(
   platform: Platform | null | undefined,
   useType: "domestic" | "public"
 ): number {
-  const multiplier = getPlatformMultiplier(platform);
   const basePrice = useType === "domestic" 
     ? parseFloat(module.priceDomestic) 
     : parseFloat(module.pricePublic);
   
+  // Special pricing logic for HOUSE platforms
+  if (platform?.category === "house") {
+    // Barandas and Techos: multiply by m² area (current behavior)
+    if (module.category === "barandas" || module.category === "techos") {
+      const multiplier = getPlatformMultiplier(platform);
+      return Math.round(basePrice * multiplier);
+    }
+    
+    // Resbalines: base price + 20% (height adjustment, not area-based)
+    if (module.category === "resbalines") {
+      return Math.round(basePrice * 1.2);
+    }
+    
+    // Columpios and Trepadoras: base price + 30% (not area-based)
+    if (module.category === "columpios" || module.category === "trepadoras") {
+      return Math.round(basePrice * 1.3);
+    }
+    
+    // Other categories: use base price without multiplier
+    return Math.round(basePrice);
+  }
+  
+  // PLAYGROUND platforms: use height-based multipliers for all modules
+  const multiplier = getPlatformMultiplier(platform);
   return Math.round(basePrice * multiplier);
 }
 
