@@ -53,6 +53,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 29, 2025 - Implemented Mobile Dropdown Menu for Module Categories:**
+- **Problem**: Horizontal ScrollArea tabs in Step 4 pushed mobile layout off-screen despite responsive padding fixes
+- **User Request**: Implement dropdown/overlay menu for categories to maintain responsive design on mobile
+- **Solution**: Responsive dual-interface pattern for category selection
+  - **Mobile (< 640px)**: shadcn Select dropdown component that overlays content
+  - **Desktop (>= 640px)**: Horizontal scrollable tabs (original behavior)
+  - Both interfaces share same `selectedCategory` state and module display logic
+- **Implementation**:
+  - Added `selectedCategory` state at component level
+  - Moved `MODULE_CATEGORIES` and `modulesByCategory` logic to top of component
+  - Added useEffect to reset category when productType/useType changes
+  - Created responsive conditional rendering (sm:hidden / hidden sm:block)
+  - Single module grid displays content from `modulesByCategory[selectedCategory]`
+- **Benefits**:
+  - Select overlay doesn't affect layout width (no horizontal overflow)
+  - Clean mobile UX with native dropdown feel
+  - Desktop experience unchanged (horizontal tabs preserved)
+  - Automatic category filtering (only shows categories with modules, same as before)
+- **Verification**: E2E test confirmed no horizontal overflow, dropdown works correctly, module content updates
+- **Note**: Both old and new implementations filter empty categories - maintains existing behavior
+
 **October 28, 2025 - Fixed Mobile Horizontal Overflow in All Configurator Steps:**
 - **Problem**: Page overflowed horizontally by ~110px on mobile when Step 4 appeared after selecting platform in Step 3
 - **Root Cause**: CardHeader and CardContent had default `p-6` (24px padding) which accumulated across nested cards, causing content width to exceed 375px mobile viewport

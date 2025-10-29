@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Info, ChevronDown, Check, Home, Building2, ClipboardList } from "lucide-react";
 import ModuleCard from "./ModuleCard";
 import PriceSummary from "./PriceSummary";
@@ -17,6 +18,7 @@ export default function ConfiguratorPanel() {
   const [useType, setUseType] = useState<"domestic" | "public" | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>("techos");
   const prevPlatformRef = useRef<string | null>(null);
   
   // Refs para scroll automático
@@ -87,6 +89,41 @@ export default function ConfiguratorPanel() {
       });
     }
   }, [selectedPlatform, allPlatforms]);
+
+  // Categorías de módulos disponibles (ampliadas)
+  const MODULE_CATEGORIES = {
+    techos: "Techos",
+    resbalines: "Resbalines", 
+    columpios: "Columpios",
+    trepadoras: "Trepadoras",
+    barandas: "Barandas",
+    sube_y_baja: "Sube y Baja",
+    calistenia: "Calistenia",
+    accesorios: "Accesorios",
+  };
+
+  // Filter modules by category and availability (dinámico)
+  const modulesByCategory = useType ? 
+    Object.keys(MODULE_CATEGORIES).reduce((acc, categoryKey) => {
+      acc[categoryKey] = modules.filter(m => {
+        const price = useType === "domestic" 
+          ? parseFloat(m.priceDomestic) 
+          : parseFloat(m.pricePublic);
+        return m.category === categoryKey && price > 0;
+      });
+      return acc;
+    }, {} as Record<string, typeof modules>) 
+    : {};
+
+  // Reset selected category when productType or useType changes
+  useEffect(() => {
+    const availableCategories = Object.keys(MODULE_CATEGORIES).filter(
+      key => modulesByCategory[key]?.length > 0
+    );
+    if (availableCategories.length > 0 && !availableCategories.includes(selectedCategory)) {
+      setSelectedCategory(availableCategories[0]);
+    }
+  }, [productType, useType, modules]);
 
   const toggleModule = (moduleId: string) => {
     const newSelected = new Set(selectedModules);
@@ -169,31 +206,6 @@ export default function ConfiguratorPanel() {
     setItemQuantities({});
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // Categorías de módulos disponibles (ampliadas)
-  const MODULE_CATEGORIES = {
-    techos: "Techos",
-    resbalines: "Resbalines", 
-    columpios: "Columpios",
-    trepadoras: "Trepadoras",
-    barandas: "Barandas",
-    sube_y_baja: "Sube y Baja",
-    calistenia: "Calistenia",
-    accesorios: "Accesorios",
-  };
-
-  // Filter modules by category and availability (dinámico)
-  const modulesByCategory = useType ? 
-    Object.keys(MODULE_CATEGORIES).reduce((acc, categoryKey) => {
-      acc[categoryKey] = modules.filter(m => {
-        const price = useType === "domestic" 
-          ? parseFloat(m.priceDomestic) 
-          : parseFloat(m.pricePublic);
-        return m.category === categoryKey && price > 0;
-      });
-      return acc;
-    }, {} as Record<string, typeof modules>) 
-    : {};
 
   if (loadingPlatforms || loadingModules) {
     return (
@@ -486,63 +498,80 @@ export default function ConfiguratorPanel() {
                         </Alert>
                       );
                     }
-
-                    const firstCategory = availableCategories[0][0];
                     
                     return (
-                      <Tabs defaultValue={firstCategory} className="w-full">
-                        {/* Scroll horizontal para categorías */}
-                        <ScrollArea className="w-full">
-                          <div className="w-full">
-                            <TabsList className="inline-flex h-auto p-1 bg-muted w-max">
+                      <>
+                        {/* Selector para móvil - Menu desplegable superpuesto */}
+                        <div className="sm:hidden mb-6">
+                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="w-full" data-testid="select-category-mobile">
+                              <SelectValue placeholder="Selecciona una categoría" />
+                            </SelectTrigger>
+                            <SelectContent>
                               {availableCategories.map(([key, label]) => (
-                                <TabsTrigger 
-                                  key={key} 
-                                  value={key} 
-                                  data-testid={`tab-${key}`}
-                                  className="px-4 py-2 data-[state=active]:bg-background whitespace-nowrap"
-                                >
+                                <SelectItem key={key} value={key} data-testid={`select-item-${key}`}>
                                   {label}
-                                </TabsTrigger>
+                                </SelectItem>
                               ))}
-                            </TabsList>
-                          </div>
-                          <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Tabs para tablet/desktop - Scroll horizontal */}
+                        <div className="hidden sm:block">
+                          <ScrollArea className="w-full">
+                            <div className="w-full">
+                              <div className="inline-flex h-auto p-1 bg-muted rounded-md w-max">
+                                {availableCategories.map(([key, label]) => (
+                                  <button
+                                    key={key}
+                                    onClick={() => setSelectedCategory(key)}
+                                    data-testid={`tab-${key}`}
+                                    className={`px-4 py-2 rounded-sm whitespace-nowrap transition-colors ${
+                                      selectedCategory === key
+                                        ? "bg-background shadow-sm"
+                                        : "hover-elevate"
+                                    }`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                        </div>
 
                         {/* Aviso de recordatorio */}
                         <Alert className="mt-6 mb-4 bg-primary/5 border-primary/20">
                           <Info className="h-4 w-4 text-primary" />
                           <AlertDescription className="text-sm">
-                            <strong>¡No olvides seleccionar módulos!</strong> Explora las categorías arriba para agregar componentes a tu configuración.
+                            <strong>¡No olvides seleccionar módulos!</strong> Explora las categorías {availableCategories.length > 1 ? (window.innerWidth < 640 ? "en el menú desplegable" : "arriba") : ""} para agregar componentes a tu configuración.
                           </AlertDescription>
                         </Alert>
                         
-                        {availableCategories.map(([categoryKey]) => (
-                          <TabsContent key={categoryKey} value={categoryKey} className="mt-0">
-                            <div className="grid md:grid-cols-2 gap-4">
-                              {modulesByCategory[categoryKey].map((module) => {
-                                const material = useType === "domestic" ? module.material : module.materialPublic;
-                                const currentPlatform = platforms.find(p => p.id === selectedPlatform);
-                                const price = getAdjustedModulePrice(module, currentPlatform, useType!);
-                                return (
-                                  <ModuleCard
-                                    key={module.id}
-                                    id={module.id}
-                                    name={module.name}
-                                    material={material}
-                                    price={price}
-                                    isSelected={selectedModules.has(module.id)}
-                                    onToggle={() => toggleModule(module.id)}
-                                    useType={useType!}
-                                    imageUrl={module.imageUrl}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </TabsContent>
-                        ))}
-                      </Tabs>
+                        {/* Contenido de módulos */}
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {modulesByCategory[selectedCategory]?.map((module) => {
+                            const material = useType === "domestic" ? module.material : module.materialPublic;
+                            const currentPlatform = platforms.find(p => p.id === selectedPlatform);
+                            const price = getAdjustedModulePrice(module, currentPlatform, useType!);
+                            return (
+                              <ModuleCard
+                                key={module.id}
+                                id={module.id}
+                                name={module.name}
+                                material={material}
+                                price={price}
+                                isSelected={selectedModules.has(module.id)}
+                                onToggle={() => toggleModule(module.id)}
+                                useType={useType!}
+                                imageUrl={module.imageUrl}
+                              />
+                            );
+                          })}
+                        </div>
+                      </>
                     );
                   })()}
                   
