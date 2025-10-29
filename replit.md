@@ -33,7 +33,11 @@ Preferred communication style: Simple, everyday language.
 ### Pricing Logic
 - **Dynamic Module Pricing**: Base prices adjust based on platform size and type.
     - **Playgrounds**: Multipliers based on platform height (e.g., 100cm = 1.0x, 80cm = 0.8x).
-    - **Casitas (Houses)**: Prices calculated by actual area in mt2 (e.g., 1x1m = 1.0x, 2x2m = 4.0x).
+    - **Casitas (Houses)**: Category-specific pricing rules:
+        - **Barandas and Techos**: Multiplied by actual area in m² (e.g., 1×1m = 1.0x, 2×2m = 4.0x)
+        - **Resbalines**: Base price + 20% for all house models (height adjustment, NOT m²-based)
+        - **Columpios and Trepadoras**: Base price + 30% for all house models (NOT m²-based)
+        - **Other categories**: Base price without multiplier
 - Admins manage only base prices.
 
 ### Image Management
@@ -52,6 +56,40 @@ Preferred communication style: Simple, everyday language.
 - **Development Tools**: @replit/vite-plugin-*, tsx, drizzle-kit.
 
 ## Recent Changes
+
+**October 29, 2025 - Implemented Category-Specific Pricing for Casitas:**
+- **Problem**: All casita modules were multiplied by m² area, but some modules need different pricing logic
+- **User Request**: Different pricing rules per module category:
+  - Barandas and Techos: Keep m²-based multiplication
+  - Resbalines: Unit price + 20% (height adjustment, not area-based)
+  - Columpios and Trepadoras: Unit price + 30% (not area-based)
+- **Solution**: Modified `getAdjustedModulePrice()` in `shared/pricing.ts` to branch by module category for house platforms
+- **Implementation**:
+  ```typescript
+  if (platform?.category === "house") {
+    if (module.category === "barandas" || module.category === "techos") {
+      return Math.round(basePrice * areaMultiplier); // m²-based
+    }
+    if (module.category === "resbalines") {
+      return Math.round(basePrice * 1.2); // +20%
+    }
+    if (module.category === "columpios" || module.category === "trepadoras") {
+      return Math.round(basePrice * 1.3); // +30%
+    }
+    return Math.round(basePrice); // Other categories: base price
+  }
+  ```
+- **Benefits**:
+  - Accurate pricing for different module types
+  - Resbalines reflect height adjustment cost, not area
+  - Columpios/Trepadoras have fixed markup regardless of house size
+  - Barandas/Techos still scale appropriately with house dimensions
+  - Playground pricing unchanged (height-based multipliers)
+- **Verification**: E2E test confirmed:
+  - 2×2m house: Techo = Bs 3,200 (×4), Resbalín = Bs 2,400 (×1.2), Columpio = Bs 780 (×1.3)
+  - 1×1m house: Techo = Bs 800 (×1), Resbalín = Bs 2,400 (×1.2), Columpio = Bs 780 (×1.3)
+  - Only area-dependent modules (Barandas/Techos) change with platform size
+- **Architect review**: ✅ Approved - logic correct, E2E validated, suggests externalizing percentages for future configurability
 
 **October 29, 2025 - Implemented Mobile Dropdown Menu for Module Categories:**
 - **Problem**: Horizontal ScrollArea tabs in Step 4 pushed mobile layout off-screen despite responsive padding fixes
