@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema, insertSiteContentSchema, insertGalleryImageSchema, insertHeroCarouselImageSchema } from "@shared/schema";
+import { insertPlatformSchema, insertModuleSchema, insertQuoteSchema, insertSiteContentSchema, insertGalleryImageSchema, insertHeroCarouselImageSchema, insertFeaturedProductSchema } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import multer from "multer";
 import path from "path";
@@ -461,6 +461,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error setting module image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // FEATURED PRODUCTS endpoints
+  app.get("/api/featured-products", async (req, res) => {
+    try {
+      const products = await storage.getFeaturedProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching featured products:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/featured-products/:id", async (req, res) => {
+    try {
+      const product = await storage.getFeaturedProduct(req.params.id);
+      if (!product) {
+        return res.status(404).json({ error: "Featured product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error("Error fetching featured product:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/featured-products", async (req, res) => {
+    try {
+      const validatedData = insertFeaturedProductSchema.parse(req.body);
+      const product = await storage.createFeaturedProduct(validatedData);
+      res.status(201).json(product);
+    } catch (error) {
+      console.error("Error creating featured product:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/featured-products/:id", async (req, res) => {
+    try {
+      const product = await storage.updateFeaturedProduct(req.params.id, req.body);
+      res.json(product);
+    } catch (error) {
+      console.error("Error updating featured product:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/featured-products/:id", async (req, res) => {
+    try {
+      await storage.deleteFeaturedProduct(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting featured product:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/featured-products/:id/image", async (req, res) => {
+    if (!req.body.imageUrl) {
+      return res.status(400).json({ error: "imageUrl is required" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.imageUrl,
+      );
+
+      const product = await storage.updateFeaturedProduct(req.params.id, {
+        imageUrl: objectPath,
+      });
+
+      res.status(200).json({
+        objectPath: objectPath,
+        product,
+      });
+    } catch (error) {
+      console.error("Error setting featured product image:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

@@ -1,5 +1,5 @@
-import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type HeroCarouselImage, type ProductImage, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage, type InsertHeroCarouselImage, type InsertProductImage } from "@shared/schema";
-import { platforms, modules, quotes, siteContent, galleryImages, heroCarouselImages, productImages } from "@shared/schema";
+import { type Platform, type Module, type Quote, type SiteContent, type GalleryImage, type HeroCarouselImage, type ProductImage, type FeaturedProduct, type InsertPlatform, type InsertModule, type InsertQuote, type InsertSiteContent, type InsertGalleryImage, type InsertHeroCarouselImage, type InsertProductImage, type InsertFeaturedProduct } from "@shared/schema";
+import { platforms, modules, quotes, siteContent, galleryImages, heroCarouselImages, productImages, featuredProducts } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, count, sql } from "drizzle-orm";
 
@@ -47,6 +47,13 @@ export interface IStorage {
   createProductImage(image: InsertProductImage): Promise<ProductImage>;
   deleteProductImage(id: string): Promise<void>;
   getProductImagesCount(): Promise<number>;
+  
+  // Featured Products
+  getFeaturedProducts(): Promise<FeaturedProduct[]>;
+  getFeaturedProduct(id: string): Promise<FeaturedProduct | undefined>;
+  createFeaturedProduct(product: InsertFeaturedProduct): Promise<FeaturedProduct>;
+  updateFeaturedProduct(id: string, product: Partial<InsertFeaturedProduct>): Promise<FeaturedProduct>;
+  deleteFeaturedProduct(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -247,6 +254,37 @@ export class DatabaseStorage implements IStorage {
   async getProductImagesCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(productImages);
     return result?.count || 0;
+  }
+
+  // Featured Products
+  async getFeaturedProducts(): Promise<FeaturedProduct[]> {
+    return await db.select().from(featuredProducts).orderBy(asc(featuredProducts.order));
+  }
+
+  async getFeaturedProduct(id: string): Promise<FeaturedProduct | undefined> {
+    const [product] = await db.select().from(featuredProducts).where(eq(featuredProducts.id, id));
+    return product || undefined;
+  }
+
+  async createFeaturedProduct(insertProduct: InsertFeaturedProduct): Promise<FeaturedProduct> {
+    const [product] = await db
+      .insert(featuredProducts)
+      .values(insertProduct)
+      .returning();
+    return product;
+  }
+
+  async updateFeaturedProduct(id: string, updateData: Partial<InsertFeaturedProduct>): Promise<FeaturedProduct> {
+    const [product] = await db
+      .update(featuredProducts)
+      .set(updateData)
+      .where(eq(featuredProducts.id, id))
+      .returning();
+    return product;
+  }
+
+  async deleteFeaturedProduct(id: string): Promise<void> {
+    await db.delete(featuredProducts).where(eq(featuredProducts.id, id));
   }
 }
 

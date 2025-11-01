@@ -87,6 +87,18 @@ export const productImages = pgTable("product_images", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const featuredProducts = pgTable("featured_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  startingPrice: decimal("starting_price", { precision: 10, scale: 2 }).notNull(),
+  imageUrl: text("image_url"),
+  order: integer("order").notNull().default(0),
+  enabled: boolean("enabled").notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const insertPlatformSchema = createInsertSchema(platforms).omit({ id: true });
 export const insertModuleSchema = createInsertSchema(modules).omit({ id: true });
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
@@ -94,6 +106,7 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({ id
 export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({ id: true, createdAt: true });
 export const insertHeroCarouselImageSchema = createInsertSchema(heroCarouselImages).omit({ id: true, createdAt: true });
 export const insertProductImageSchema = createInsertSchema(productImages).omit({ id: true, createdAt: true });
+export const insertFeaturedProductSchema = createInsertSchema(featuredProducts).omit({ id: true, createdAt: true });
 
 export type Platform = typeof platforms.$inferSelect;
 export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
@@ -115,3 +128,6 @@ export type InsertHeroCarouselImage = z.infer<typeof insertHeroCarouselImageSche
 
 export type ProductImage = typeof productImages.$inferSelect;
 export type InsertProductImage = z.infer<typeof insertProductImageSchema>;
+
+export type FeaturedProduct = typeof featuredProducts.$inferSelect;
+export type InsertFeaturedProduct = z.infer<typeof insertFeaturedProductSchema>;
