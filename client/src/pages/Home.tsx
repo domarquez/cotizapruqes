@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { SiteContent, FeaturedProduct } from "@shared/schema";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function Home() {
   const { data: siteContent = [] } = useQuery<SiteContent[]>({
@@ -92,11 +99,30 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-8 text-center" data-testid="text-products-title">
               {getContent("products_title", "Nuestros Productos")}
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {activeProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full max-w-7xl mx-auto px-12"
+              data-testid="carousel-products"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {activeProducts.map((product) => (
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                    <ProductCard {...product} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious 
+                className="hover-elevate active-elevate-2" 
+                data-testid="button-carousel-prev"
+              />
+              <CarouselNext 
+                className="hover-elevate active-elevate-2" 
+                data-testid="button-carousel-next"
+              />
+            </Carousel>
           </div>
 
           <div className="bg-primary/5 rounded-lg p-12 text-center">
