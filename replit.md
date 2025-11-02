@@ -53,3 +53,38 @@ Preferred communication style: Simple, everyday language.
 - **Utilities**: class-variance-authority, clsx, tailwind-merge, date-fns, jspdf.
 - **Database**: @neondatabase/serverless, ws.
 - **Development Tools**: @replit/vite-plugin-*, tsx, drizzle-kit.
+
+## Recent Changes
+
+**November 2, 2025 - Implemented Featured Products Carousel:**
+- **Problem**: "Nuestros Productos" section displayed products in a static grid; no easy way to showcase more than 3-6 products without cluttering the homepage
+- **User Request**: 
+  1. Make products editable through admin panel (images, text, prices)
+  2. Display products in a carousel showing 3 at a time
+  3. Support up to 12 total products
+- **Solution**: Full CRUD system with responsive carousel implementation
+- **Implementation**:
+  - **Database & Backend**: Full CRUD for featured products (completed earlier)
+  - **Carousel**: Implemented using shadcn Carousel (Embla Carousel library)
+    - **Desktop (>1024px)**: Shows 3 products simultaneously
+    - **Tablet (640-1024px)**: Shows 2 products simultaneously
+    - **Mobile (<640px)**: Shows 1 product at a time
+  - **Navigation**: Left/right arrow buttons with infinite loop
+  - **Features**:
+    - Smooth scroll animations
+    - Touch/swipe support on mobile devices
+    - Keyboard navigation (arrow keys)
+    - Accessible ARIA labels
+    - Loop enabled (navigates from last to first seamlessly)
+- **Benefits**:
+  - Showcase 12+ products without overwhelming the homepage
+  - Improved mobile UX with swipe gestures
+  - Professional carousel UI consistent with modern web standards
+  - Admin can manage unlimited products, visible 3 at a time
+- **Verification**: E2E tested ✅
+  - Desktop: 3 products visible, navigation works both directions
+  - Mobile: 1 product visible, swipe and button navigation functional
+  - Responsive breakpoints verified
+  - Loop navigation confirmed
+- **Files Changed**: 
+  - `client/src/pages/Home.tsx` - Replaced grid with Carousel component
