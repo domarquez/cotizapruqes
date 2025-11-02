@@ -57,6 +57,43 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 2, 2025 - Implemented Editable Featured Products System:**
+- **Problem**: "Nuestros Productos" section on home page used hardcoded data; admin couldn't edit product images, titles, descriptions, or prices
+- **User Request**: Create admin interface to edit the 3 featured products shown on homepage (images, text, prices)
+- **Solution**: Full CRUD system for featured products with database persistence
+- **Implementation**:
+  - **Database**: Created `featured_products` table with fields: title, description, category, startingPrice (decimal), imageUrl, order, enabled
+  - **Storage Layer**: Added CRUD methods to `IStorage` and `DatabaseStorage` 
+  - **API Endpoints**: 6 RESTful endpoints (/api/featured-products) for GET, POST, PATCH, DELETE, image upload
+  - **Admin Panel**: New "Productos Destacados" tab with:
+    - Table view with inline editing for all fields
+    - ObjectUploader integration for image management
+    - Delete functionality for each product
+    - Order field to control display sequence
+  - **Home Page**: Replaced hardcoded array with dynamic query to `/api/featured-products`
+    - Filters by enabled status
+    - Sorts by order field
+    - Shows placeholder SVG for products without images
+  - **Seed Data**: Added `seedFeaturedProducts()` to create initial 3 products
+- **Benefits**:
+  - Admin can now edit all product information without touching code
+  - Image uploads via Object Storage integration
+  - Extensible system - can add more than 3 products
+  - Order field allows rearranging product display
+  - Enable/disable products without deletion
+  - Placeholder images ensure content always visible
+- **Verification**: Architect reviewed ✅
+  - Products render correctly with placeholder images
+  - Admin panel fully functional
+  - No regressions in existing functionality
+- **Files Changed**: 
+  - `shared/schema.ts` - New table and types
+  - `server/storage.ts` - CRUD operations
+  - `server/routes.ts` - API endpoints
+  - `server/seed.ts` - Initial data
+  - `client/src/pages/Admin.tsx` - New tab
+  - `client/src/pages/Home.tsx` - Dynamic data loading
+
 **October 29, 2025 - Implemented Category-Specific Pricing for Casitas:**
 - **Problem**: All casita modules were multiplied by m² area, but some modules need different pricing logic
 - **User Request**: Different pricing rules per module category:

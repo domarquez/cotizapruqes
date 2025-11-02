@@ -3,14 +3,15 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import type { SiteContent } from "@shared/schema";
-import playhouseImage from "@assets/generated_images/Wooden_playhouse_product_image_a65facdf.png";
-import towerImage from "@assets/generated_images/Playground_tower_structure_image_d1b63007.png";
-import cabinImage from "@assets/generated_images/Large_wooden_cabin_image_1817a604.png";
+import type { SiteContent, FeaturedProduct } from "@shared/schema";
 
 export default function Home() {
   const { data: siteContent = [] } = useQuery<SiteContent[]>({
     queryKey: ["/api/site-content"],
+  });
+
+  const { data: featuredProducts = [] } = useQuery<FeaturedProduct[]>({
+    queryKey: ["/api/featured-products"],
   });
 
   const getContent = (key: string, defaultValue: string) => {
@@ -18,33 +19,21 @@ export default function Home() {
     return content?.value || defaultValue;
   };
 
-  //todo: remove mock functionality
-  const products = [
-    {
-      id: "1",
-      title: "Parque Modular Clásico",
-      description: "Plataforma base con múltiples opciones de personalización. Ideal para espacios pequeños y medianos.",
-      imageUrl: playhouseImage,
-      category: "Parque Infantil" as const,
-      startingPrice: 450000,
-    },
-    {
-      id: "2",
-      title: "Torre de Juegos",
-      description: "Sistema de múltiples niveles con escalada y resbalín. Perfecto para parques grandes.",
-      imageUrl: towerImage,
-      category: "Parque Infantil" as const,
-      startingPrice: 680000,
-    },
-    {
-      id: "3",
-      title: "Casa de Madera Premium",
-      description: "Casa espaciosa de 3x3m con acabados premium. Ideal para niños y adultos.",
-      imageUrl: cabinImage,
-      category: "Casa de Madera" as const,
-      startingPrice: 1200000,
-    },
-  ];
+  // Placeholder image for products without uploaded images
+  const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+  // Filter and sort enabled products by order
+  const activeProducts = featuredProducts
+    .filter(p => p.enabled) // Show all enabled products
+    .sort((a, b) => a.order - b.order)
+    .map(p => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      category: p.category as "Parque Infantil" | "Casa de Madera",
+      imageUrl: p.imageUrl || placeholderImage, // Use placeholder if no image
+      startingPrice: parseFloat(p.startingPrice),
+    }));
 
   return (
     <div>
@@ -104,7 +93,7 @@ export default function Home() {
               {getContent("products_title", "Nuestros Productos")}
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
+              {activeProducts.map((product) => (
                 <ProductCard key={product.id} {...product} />
               ))}
             </div>

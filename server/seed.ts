@@ -137,9 +137,65 @@ async function seedContent() {
   console.log("✅ Site content seeded successfully!");
 }
 
-seedContent()
+async function seedFeaturedProducts() {
+  console.log("🌱 Seeding featured products...");
+  
+  // Note: Using public placeholder URLs - admin should replace with actual uploaded images
+  const products = [
+    {
+      title: "Parque Modular Clásico",
+      description: "Plataforma base con múltiples opciones de personalización. Ideal para espacios pequeños y medianos.",
+      category: "Parque Infantil",
+      startingPrice: "450000",
+      imageUrl: null, // Will be set via admin panel
+      order: 1,
+      enabled: true,
+    },
+    {
+      title: "Torre de Juegos",
+      description: "Sistema de múltiples niveles con escalada y resbalín. Perfecto para parques grandes.",
+      category: "Parque Infantil",
+      startingPrice: "680000",
+      imageUrl: null, // Will be set via admin panel
+      order: 2,
+      enabled: true,
+    },
+    {
+      title: "Casa de Madera Premium",
+      description: "Casa espaciosa de 3x3m con acabados premium. Ideal para niños y adultos.",
+      category: "Casa de Madera",
+      startingPrice: "1200000",
+      imageUrl: null, // Will be set via admin panel
+      order: 3,
+      enabled: true,
+    },
+  ];
+
+  for (const product of products) {
+    try {
+      await storage.createFeaturedProduct(product);
+      console.log(`  ✓ Created: ${product.title}`);
+    } catch (error: any) {
+      // Skip if already exists
+      if (error?.message?.includes("duplicate") || error?.message?.includes("unique")) {
+        console.log(`  ⊙ Already exists: ${product.title}`);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  console.log("✅ Featured products seeded successfully!");
+}
+
+async function seed() {
+  await seedContent();
+  await seedFeaturedProducts();
+}
+
+seed()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("❌ Error seeding content:", error);
+    console.error("❌ Error seeding:", error);
     process.exit(1);
   });

@@ -29,7 +29,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import AdminLogin from "@/components/AdminLogin";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Platform, Module, SiteContent, GalleryImage, HeroCarouselImage } from "@shared/schema";
+import type { Platform, Module, SiteContent, GalleryImage, HeroCarouselImage, FeaturedProduct } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
 function EditableContentField({
@@ -242,6 +242,11 @@ export default function Admin() {
     enabled: isAuthenticated,
   });
 
+  const { data: featuredProducts = [], isLoading: loadingFeatured } = useQuery<FeaturedProduct[]>({
+    queryKey: ["/api/featured-products"],
+    enabled: isAuthenticated,
+  });
+
   const updatePlatformMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       return await apiRequest("PATCH", `/api/platforms/${id}`, data);
@@ -439,6 +444,58 @@ export default function Admin() {
     },
   });
 
+  const updateFeaturedProductMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/featured-products/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/featured-products"] });
+      toast({ title: "Producto destacado actualizado" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar", variant: "destructive" });
+    },
+  });
+
+  const deleteFeaturedProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/featured-products/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/featured-products"] });
+      toast({ title: "Producto destacado eliminado" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar", variant: "destructive" });
+    },
+  });
+
+  const addFeaturedProductMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/featured-products", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/featured-products"] });
+      toast({ title: "Producto destacado agregado exitosamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al agregar producto", variant: "destructive" });
+    },
+  });
+
+  const updateFeaturedProductImageMutation = useMutation({
+    mutationFn: async ({ id, imageUrl }: { id: string; imageUrl: string }) => {
+      return await apiRequest("PUT", `/api/featured-products/${id}/image`, { imageUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/featured-products"] });
+      toast({ title: "Imagen del producto actualizada" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar imagen", variant: "destructive" });
+    },
+  });
+
   const handleLogout = () => {
     setIsAuthenticated(false);
   };
@@ -449,6 +506,10 @@ export default function Admin() {
 
   const updateModuleField = (id: string, field: string, value: string) => {
     updateModuleMutation.mutate({ id, data: { [field]: value } });
+  };
+
+  const updateFeaturedProductField = (id: string, field: string, value: string) => {
+    updateFeaturedProductMutation.mutate({ id, data: { [field]: value } });
   };
 
   if (!isAuthenticated) {
@@ -478,9 +539,10 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="platforms" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="platforms" data-testid="tab-platforms">Plataformas</TabsTrigger>
           <TabsTrigger value="modules" data-testid="tab-modules">Módulos</TabsTrigger>
+          <TabsTrigger value="featured" data-testid="tab-featured">Productos Destacados</TabsTrigger>
           <TabsTrigger value="content" data-testid="tab-content">Contenido del Sitio</TabsTrigger>
           <TabsTrigger value="hero-carousel" data-testid="tab-hero-carousel">Carrusel Hero</TabsTrigger>
           <TabsTrigger value="gallery" data-testid="tab-gallery">Galería</TabsTrigger>
@@ -750,6 +812,122 @@ export default function Admin() {
                             className="h-8 w-8 hover-elevate active-elevate-2"
                             onClick={() => deleteModuleMutation.mutate(module.id)}
                             data-testid={`button-delete-module-${module.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="featured" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Productos Destacados</CardTitle>
+              <CardDescription>
+                Edita los productos que aparecen en la sección "Nuestros Productos" de la página principal
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingFeatured ? (
+                <p className="text-center py-8 text-muted-foreground">Cargando...</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Imagen</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Precio Desde (Bs)</TableHead>
+                      <TableHead>Orden</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {featuredProducts.map((product) => (
+                      <TableRow key={product.id} data-testid={`row-featured-${product.id}`}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {product.imageUrl ? (
+                              <img 
+                                src={product.imageUrl} 
+                                alt={product.title}
+                                className="w-12 h-12 object-cover rounded"
+                                data-testid={`img-featured-${product.id}`}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const uploadedUrl = result.successful[0].uploadURL;
+                                  updateFeaturedProductImageMutation.mutate({
+                                    id: product.id,
+                                    imageUrl: uploadedUrl,
+                                  });
+                                }
+                              }}
+                              buttonClassName="h-8"
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </ObjectUploader>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <InlineEditInput
+                            value={product.title}
+                            onSave={(value) => updateFeaturedProductField(product.id, "title", value)}
+                            testId={`featured-${product.id}-title`}
+                          />
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <InlineEditInput
+                            value={product.description}
+                            onSave={(value) => updateFeaturedProductField(product.id, "description", value)}
+                            testId={`featured-${product.id}-description`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={product.category}
+                            onSave={(value) => updateFeaturedProductField(product.id, "category", value)}
+                            testId={`featured-${product.id}-category`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={product.startingPrice}
+                            onSave={(value) => updateFeaturedProductField(product.id, "startingPrice", value)}
+                            type="number"
+                            testId={`featured-${product.id}-price`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <InlineEditInput
+                            value={product.order.toString()}
+                            onSave={(value) => updateFeaturedProductField(product.id, "order", value)}
+                            type="number"
+                            testId={`featured-${product.id}-order`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 hover-elevate active-elevate-2"
+                            onClick={() => deleteFeaturedProductMutation.mutate(product.id)}
+                            data-testid={`button-delete-featured-${product.id}`}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
